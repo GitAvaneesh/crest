@@ -1,3 +1,42 @@
+# Environment variables - NEVER commit these
 .env
 .env.*
 *.env
+.env.local
+.env.production
+
+# Supabase (keep folder structure, hide secrets)
+supabase/.temp/
+supabase/config.toml
+
+# Vercel
+.vercel/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor stuff
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Node (if you ever add any)
+node_modules/
+package-lock.json
+
+# Secrets / keys (extra safety net)
+*.pem
+*.key
+*.p12
+*.pfx
+serviceAccountKey.json
