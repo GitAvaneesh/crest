@@ -2,15 +2,15 @@
  * ================================================================
  * CREST AI — chat.js
  * Application controller. Manages the full UI lifecycle:
- *   - Supabase auth gate & session validation
- *   - First-run username setup modal flow
- *   - Dynamic auto-expanding textarea
- *   - Send button enabled/disabled cursor logic
- *   - Prompt submission, API fetch, and response rendering
- *   - Quota counter management
- *   - Scroll-lock to latest message
- *   - Mobile sidebar open/close
- *   - Alert banner utility
+ * - Supabase auth gate & session validation
+ * - First-run username setup modal flow
+ * - Dynamic auto-expanding textarea
+ * - Send button enabled/disabled cursor logic
+ * - Prompt submission, API fetch, and response rendering
+ * - Quota counter management
+ * - Scroll-lock to latest message
+ * - Mobile sidebar open/close
+ * - Alert banner utility
  * ================================================================
  */
 
@@ -28,887 +28,688 @@ try {
     "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeWRndWJha2piYmdpamZncWVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTk0ODAsImV4cCI6MjA5NDU5NTQ4MH0." +
     "l_qLFevXcY7Ss8Qh4UN8_Rupl761woxiVuRhCFZsTpM";
 
-  // window.supabase is exposed by the UMD CDN build loaded in chat.html
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (initError) {
-  console.error("[Crest AI] Supabase initialisation failed:", initError);
+  if (window.supabase && window.supabase.createClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log("Supabase Client engine successfully attached to Crest runtime pipeline.");
+  } else {
+    throw new Error("Supabase browser global reference not found in script tree.");
+  }
+} catch (err) {
+  console.error("Database Engine Mount Core Fault:", err.message);
 }
 
 /* ---------------------------------------------------------------
-   2. BACKEND & APP CONFIGURATION CONSTANTS
+   2. EDGE BACKEND ROUTING CONFIGURATION
 --------------------------------------------------------------- */
-/** Cloudflare Worker endpoint that proxies prompts to the AI model. */
-const BACKEND_API_URL = "https://crest-ai-backend.devavaneesh.workers.dev/";
-
-/** Maximum number of requests a user can make per session load. */
-const MAX_QUOTA = 100;
+const BACKEND_WORKER_URL = "https://crest-ai-backend.devavaneesh.workers.dev/";
 
 /* ---------------------------------------------------------------
-   3. REACTIVE APPLICATION STATE
+   3. GLOBAL STATE MATRIX
 --------------------------------------------------------------- */
-const AppState = {
-  /** The authenticated Supabase user object. Set during init. */
-  user: null,
-
-  /** Remaining prompt requests this session. Decremented on submit. */
-  quotaRemaining: MAX_QUOTA,
-
-  /** True while an AI response fetch is in flight. Blocks re-submission. */
-  isGenerating: false,
-
-  /** True once the first user message has been submitted. */
-  hasStartedConversation: false,
+const appState = {
+  currentUser: null,          // Holds active Supabase user metadata
+  isGenerating: false,        // Lock flag to block double form submissions
+  remainingQuota: 100,        // Daily counter limit state tracking
+  maxQuota: 100               // Max ceiling limit balance parameter
 };
 
 /* ---------------------------------------------------------------
-   4. DOM ELEMENT REFERENCES
-   Grabbed once after DOMContentLoaded to avoid repeated queries.
+   4. DOM ELEMENT CACHE REFERENCE REGISTRY
 --------------------------------------------------------------- */
-let DOM = {};
+const dom = {
+  alertBanner: null,
+  alertText: null,
+  alertDismissBtn: null,
+  usernameModal: null,
+  modalInput: null,
+  modalError: null,
+  modalSubmitBtn: null,
+  appLayout: null,
+  chatSidebar: null,
+  sidebarCloseBtn: null,
+  newChatBtn: null,
+  userEmailLabel: null,
+  chatViewport: null,
+  mobileMenuToggle: null,
+  statusText: null,
+  chatScrollArea: null,
+  emptyWelcomeState: null,
+  chatThreadContainer: null,
+  promptSubmitForm: null,
+  promptTextarea: null,
+  charCounter: null,
+  quotaDisplay: null,
+  promptSendBtn: null,
+  sidebarScrim: null
+};
 
 /**
- * Binds every required DOM element to the DOM cache object.
- * Called once at the top of initApp().
+ * Binds all interface selectors cleanly to our registry object.
  */
 function bindDOMReferences() {
-  DOM = {
-    // Alert banner
-    alertSystem:        document.getElementById("workspaceAlertSystem"),
-    alertText:          document.getElementById("workspaceAlertText"),
-    alertDismissBtn:    document.getElementById("alertDismissBtn"),
-
-    // Username modal
-    usernameModal:      document.getElementById("usernameModal"),
-    modalUsernameInput: document.getElementById("modalUsernameInput"),
-    modalErrorText:     document.getElementById("modalErrorText"),
-    saveUsernameBtn:    document.getElementById("saveUsernameBtn"),
-
-    // Sidebar
-    chatSidebar:        document.getElementById("chatSidebar"),
-    closeSidebarBtn:    document.getElementById("closeSidebarBtn"),
-    newChatBtn:         document.getElementById("newChatBtn"),
-    profileLabel:       document.getElementById("userProfileEmailDisplayLabel"),
-    signOutBtn:         document.getElementById("signOutBtn"),
-
-    // Topbar
-    mobileMenuToggleBtn: document.getElementById("mobileMenuToggleBtn"),
-    statusText:          document.getElementById("pipelineStatusText"),
-    statusDot:           document.getElementById("statusDotIndicator"),
-
-    // Chat area
-    chatScrollContainer:  document.getElementById("chatScrollContainer"),
-    emptyWelcomeState:    document.getElementById("emptyWelcomeState"),
-    chatThreadContainer:  document.getElementById("chatThreadContainer"),
-    suggestionCards:      document.querySelectorAll(".suggestion-card"),
-
-    // Input panel
-    promptSubmitForm:   document.getElementById("promptSubmitForm"),
-    promptTextarea:     document.getElementById("promptTextarea"),
-    charCounter:        document.getElementById("charCounter"),
-    quotaBalanceDisplay: document.getElementById("quotaBalanceDisplay"),
-    promptSendBtn:      document.getElementById("promptSendBtn"),
-  };
+  dom.alertBanner         = document.getElementById("workspaceAlertSystem");
+  dom.alertText           = document.getElementById("workspaceAlertText");
+  dom.alertDismissBtn     = document.getElementById("alertDismissBtn");
+  dom.usernameModal       = document.getElementById("usernameModal");
+  dom.modalInput          = document.getElementById("modalUsernameInput");
+  dom.modalError          = document.getElementById("modalErrorText");
+  dom.modalSubmitBtn      = document.getElementById("saveUsernameBtn");
+  dom.appLayout           = document.querySelector(".app-layout");
+  dom.chatSidebar         = document.getElementById("chatSidebar");
+  dom.sidebarCloseBtn     = document.getElementById("closeSidebarBtn");
+  dom.newChatBtn          = document.getElementById("newChatBtn");
+  dom.userEmailLabel      = document.getElementById("userProfileEmailDisplayLabel");
+  dom.chatViewport        = document.querySelector(".chat-viewport");
+  dom.mobileMenuToggle    = document.getElementById("mobileMenuToggleBtn");
+  dom.statusText          = document.getElementById("pipelineStatusText");
+  dom.chatScrollArea      = document.getElementById("chatScrollContainer");
+  dom.emptyWelcomeState   = document.getElementById("emptyWelcomeState");
+  dom.chatThreadContainer = document.getElementById("chatThreadContainer");
+  dom.promptSubmitForm    = document.getElementById("promptSubmitForm");
+  dom.promptTextarea      = document.getElementById("promptTextarea");
+  dom.charCounter         = document.getElementById("charCounter");
+  dom.quotaDisplay        = document.getElementById("quotaBalanceDisplay");
+  dom.promptSendBtn       = document.getElementById("promptSendBtn");
+  dom.sidebarScrim        = document.getElementById("sidebarScrim");
 }
 
 /* ---------------------------------------------------------------
-   5. ALERT BANNER UTILITIES
+   5. NOTIFICATION BANNER PIPELINE
 --------------------------------------------------------------- */
 
 /**
- * Displays the global alert banner with the given message.
- * Auto-dismisses after the specified duration (default 5 seconds).
- * @param {string} message  - The text to display in the banner.
- * @param {number} [duration=5000] - Auto-dismiss delay in milliseconds.
+ * Displays an elegant non-blocking error notification banner at the top of the interface.
+ * @param {string} msg - The error notice to print out.
+ * @param {number} duration - Disappear timeout in ms. If 0, stays forever.
  */
-function showAlert(message, duration = 5000) {
-  DOM.alertText.textContent = message;
-  DOM.alertSystem.classList.add("visible");
-
-  // Clear any existing auto-dismiss timer
-  if (AppState._alertTimer) {
-    clearTimeout(AppState._alertTimer);
+function showAlert(msg, duration = 5000) {
+  if (!dom.alertBanner || !dom.alertText) return;
+  
+  dom.alertText.textContent = msg;
+  dom.alertBanner.classList.add("visible");
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      dismissAlert();
+    }, duration);
   }
-
-  // Set auto-dismiss
-  AppState._alertTimer = setTimeout(() => {
-    dismissAlert();
-  }, duration);
 }
 
 /**
- * Hides the alert banner immediately.
+ * Smoothly clears out active notification rows.
  */
 function dismissAlert() {
-  DOM.alertSystem.classList.remove("visible");
-}
-
-/* ---------------------------------------------------------------
-   6. STATUS BAR UTILITIES
---------------------------------------------------------------- */
-
-/**
- * Updates the topbar status text and dot indicator.
- * @param {"ready"|"thinking"} state - The status to display.
- */
-function setStatus(state) {
-  if (state === "thinking") {
-    DOM.statusText.textContent = "Thinking...";
-    DOM.statusDot.classList.add("thinking");
-  } else {
-    DOM.statusText.textContent = "Ready";
-    DOM.statusDot.classList.remove("thinking");
+  if (dom.alertBanner) {
+    dom.alertBanner.classList.remove("visible");
   }
 }
 
 /* ---------------------------------------------------------------
-   7. TEXTAREA AUTO-EXPAND & SEND BUTTON LOGIC
+   6. SECURITY ACCESS CONTROL AND SYSTEM INITS
 --------------------------------------------------------------- */
 
 /**
- * Handles the `input` event on the textarea.
- *  - Resets height to `auto` first so scrollHeight collapses correctly.
- *  - Sets height to scrollHeight so it expands to fit the content.
- *  - Caps at 160px (CSS max-height) after which the textarea scrolls.
- *  - Updates the character counter label.
- *  - Enables or disables the send button depending on content.
- */
-function handleTextareaInput() {
-  const textarea  = DOM.promptTextarea;
-  const sendBtn   = DOM.promptSendBtn;
-  const rawValue  = textarea.value;
-  const charCount = rawValue.length;
-
-  // --- Dynamic height expansion ---
-  // Reset to auto so the browser recalculates the natural scrollHeight
-  textarea.style.height = "auto";
-  // Expand to scrollHeight (capped by CSS max-height: 160px)
-  textarea.style.height = `${textarea.scrollHeight}px`;
-
-  // --- Character counter ---
-  DOM.charCounter.textContent = `${charCount} / 4000`;
-
-  // --- Send button enable / disable ---
-  const hasContent = rawValue.trim().length > 0;
-  sendBtn.disabled     = !hasContent;
-  sendBtn.setAttribute("aria-disabled", String(!hasContent));
-}
-
-/**
- * Resets the textarea to its base single-line height after submit.
- * Also resets the character counter.
- */
-function resetTextarea() {
-  const textarea = DOM.promptTextarea;
-  textarea.value        = "";
-  textarea.style.height = "24px"; // Exact base height specified in the design brief
-  DOM.charCounter.textContent = "0 / 4000";
-
-  // Ensure the send button is immediately disabled again
-  DOM.promptSendBtn.disabled = true;
-  DOM.promptSendBtn.setAttribute("aria-disabled", "true");
-}
-
-/* ---------------------------------------------------------------
-   8. QUOTA COUNTER MANAGEMENT
---------------------------------------------------------------- */
-
-/**
- * Decrements the session quota by 1 and updates the display label.
- * The counter goes down to 0 and does not go negative.
- */
-function decrementQuota() {
-  if (AppState.quotaRemaining > 0) {
-    AppState.quotaRemaining -= 1;
-  }
-  updateQuotaDisplay();
-}
-
-/**
- * Syncs the quota balance label with the current AppState value.
- */
-function updateQuotaDisplay() {
-  DOM.quotaBalanceDisplay.textContent =
-    `${AppState.quotaRemaining} remaining request${AppState.quotaRemaining !== 1 ? "s" : ""}`;
-}
-
-/* ---------------------------------------------------------------
-   9. MESSAGE RENDERING — SCROLL UTILITY
---------------------------------------------------------------- */
-
-/**
- * Smoothly scrolls the conversation area to the very bottom.
- * Called after every new message or loading stub is injected.
- */
-function scrollToBottom() {
-  const scrollArea = DOM.chatScrollContainer;
-  scrollArea.scrollTo({
-    top:      scrollArea.scrollHeight,
-    behavior: "smooth",
-  });
-}
-
-/* ---------------------------------------------------------------
-   10. MESSAGE RENDERING — USER BUBBLE
---------------------------------------------------------------- */
-
-/**
- * Creates and appends a user message row to the chat thread.
- * @param {string} text - The raw prompt text from the textarea.
- */
-function appendUserMessage(text) {
-  const row = document.createElement("div");
-  row.classList.add("message-row", "user-wrapper");
-
-  // Accessible meta identity label
-  const meta = document.createElement("div");
-  meta.classList.add("message-row__meta");
-  meta.textContent = "YOU";
-
-  // Bubble wraps the text
-  const bubble = document.createElement("div");
-  bubble.classList.add("message-bubble");
-  // Use textContent (not innerHTML) to safely display user text as plain text
-  bubble.textContent = text;
-
-  row.appendChild(meta);
-  row.appendChild(bubble);
-  DOM.chatThreadContainer.appendChild(row);
-
-  scrollToBottom();
-  return row;
-}
-
-/* ---------------------------------------------------------------
-   11. MESSAGE RENDERING — LOADING / GENERATING STUB
---------------------------------------------------------------- */
-
-/**
- * Injects the animated "Generating..." loading indicator into the
- * chat thread. Returns the created row element so it can be
- * replaced with the final AI response once the fetch completes.
- * @returns {HTMLElement} The loading row DOM node.
- */
-function appendLoadingBubble() {
-  const row = document.createElement("div");
-  row.classList.add("message-row", "ai-wrapper");
-  row.setAttribute("id", "loadingBubbleRow");
-
-  // Meta label
-  const meta = document.createElement("div");
-  meta.classList.add("message-row__meta");
-  meta.textContent = "CREST";
-
-  // Three-dot bounce animation container
-  const bubble = document.createElement("div");
-  bubble.classList.add("message-bubble", "generating-bubble");
-  bubble.setAttribute("aria-label", "Generating response");
-
-  for (let i = 0; i < 3; i++) {
-    const dot = document.createElement("span");
-    dot.classList.add("generating-bubble__dot");
-    bubble.appendChild(dot);
-  }
-
-  row.appendChild(meta);
-  row.appendChild(bubble);
-  DOM.chatThreadContainer.appendChild(row);
-
-  scrollToBottom();
-  return row;
-}
-
-/* ---------------------------------------------------------------
-   12. MESSAGE RENDERING — AI RESPONSE BUBBLE
---------------------------------------------------------------- */
-
-/**
- * Removes the loading stub and renders the final AI response text.
- * Applies the `.rich-text-markdown-payload-container` wrapper so
- * that CSS enforces the premium editorial serif typography rule.
- *
- * The response text is rendered as plain paragraphs split on
- * newlines. For richer markdown you could integrate a library like
- * marked.js — this implementation keeps zero extra dependencies.
- *
- * @param {HTMLElement} loadingRow - The loading stub row to replace.
- * @param {string}      responseText - The AI-returned text string.
- */
-function replaceLoadingWithResponse(loadingRow, responseText) {
-  // Build the final AI message row
-  const row = document.createElement("div");
-  row.classList.add("message-row", "ai-wrapper");
-
-  // Meta label
-  const meta = document.createElement("div");
-  meta.classList.add("message-row__meta");
-  meta.textContent = "CREST";
-
-  // Outer bubble container
-  const bubble = document.createElement("div");
-  bubble.classList.add("message-bubble");
-
-  // Inner prose container — targeted by the CSS serif typography rule
-  const proseContainer = document.createElement("div");
-  proseContainer.classList.add("rich-text-markdown-payload-container");
-
-  // Safely convert the response text into paragraph elements.
-  // Split on double-newlines for paragraph breaks; single newlines
-  // become <br> inside paragraphs.
-  const paragraphs = responseText.split(/\n{2,}/);
-
-  paragraphs.forEach((paraText) => {
-    const trimmed = paraText.trim();
-    if (!trimmed) return; // skip empty blocks
-
-    // Check for code blocks (``` ... ```)
-    if (trimmed.startsWith("```") && trimmed.endsWith("```")) {
-      const pre  = document.createElement("pre");
-      const code = document.createElement("code");
-      // Strip the surrounding backtick fences
-      const codeContent = trimmed.replace(/^```[a-z]*\n?/, "").replace(/```$/, "");
-      code.textContent = codeContent;
-      pre.appendChild(code);
-      proseContainer.appendChild(pre);
-      return;
-    }
-
-    // Heading detection: lines starting with # / ## / ###
-    if (/^#{1,4}\s/.test(trimmed)) {
-      const level   = (trimmed.match(/^(#{1,4})\s/) || ["", "#"])[1].length;
-      const heading = document.createElement(`h${level}`);
-      heading.textContent = trimmed.replace(/^#{1,4}\s/, "");
-      proseContainer.appendChild(heading);
-      return;
-    }
-
-    // Regular paragraph — single newlines become <br> within the para
-    const p = document.createElement("p");
-    const lines = trimmed.split("\n");
-    lines.forEach((line, idx) => {
-      p.appendChild(document.createTextNode(line));
-      if (idx < lines.length - 1) {
-        p.appendChild(document.createElement("br"));
-      }
-    });
-    proseContainer.appendChild(p);
-  });
-
-  bubble.appendChild(proseContainer);
-  row.appendChild(meta);
-  row.appendChild(bubble);
-
-  // Replace the loading stub with the completed response row
-  DOM.chatThreadContainer.replaceChild(row, loadingRow);
-
-  scrollToBottom();
-}
-
-/* ---------------------------------------------------------------
-   13. WELCOME STATE MANAGEMENT
---------------------------------------------------------------- */
-
-/**
- * Hides the empty welcome state panel and marks the conversation
- * as started in AppState so it is only triggered once.
- */
-function hideWelcomeState() {
-  if (!AppState.hasStartedConversation) {
-    DOM.emptyWelcomeState.classList.add("hidden");
-    AppState.hasStartedConversation = true;
-  }
-}
-
-/* ---------------------------------------------------------------
-   14. CORE PROMPT SUBMISSION FLOW
---------------------------------------------------------------- */
-
-/**
- * Handles the form submit event.
- *  1. Validates content and quota.
- *  2. Hides the welcome state on first submission.
- *  3. Appends the user bubble.
- *  4. Resets and locks the textarea.
- *  5. Appends the loading stub and updates status.
- *  6. Fires the POST fetch to the Cloudflare Worker.
- *  7. On success: replaces stub with AI response.
- *  8. On error: replaces stub with an error message.
- *  9. Always unlocks the interface and resets status.
- *
- * @param {Event} event - The form submit DOM event.
- */
-async function handlePromptSubmit(event) {
-  // Stop the browser from navigating / reloading the page
-  event.preventDefault();
-
-  const promptText = DOM.promptTextarea.value.trim();
-
-  // Guard: no empty submissions
-  if (!promptText) return;
-
-  // Guard: quota exhausted
-  if (AppState.quotaRemaining <= 0) {
-    showAlert("You have used all your available requests for this session.");
-    return;
-  }
-
-  // Guard: prevent concurrent submissions while generating
-  if (AppState.isGenerating) return;
-
-  // --- Lock the interface ---
-  AppState.isGenerating = true;
-  DOM.promptSendBtn.disabled = true;
-  DOM.promptSendBtn.setAttribute("aria-disabled", "true");
-  DOM.promptTextarea.setAttribute("readonly", "true");
-  setStatus("thinking");
-
-  // --- Hide welcome state on first submit ---
-  hideWelcomeState();
-
-  // --- Append user message ---
-  appendUserMessage(promptText);
-
-  // --- Clear and reset the textarea ---
-  resetTextarea();
-  decrementQuota();
-
-  // --- Append the loading stub ---
-  const loadingRow = appendLoadingBubble();
-
-  // --- Fire the network request ---
-  try {
-    const response = await fetch(BACKEND_API_URL, {
-      method:  "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // Payload structure expected by the Cloudflare Worker
-      body: JSON.stringify({ message: promptText }),
-    });
-
-    if (!response.ok) {
-      // Non-2xx HTTP status — surface a user-friendly error
-      throw new Error(`Server returned status ${response.status}.`);
-    }
-
-    const data = await response.json();
-
-    // The worker returns: { response: "AI text output string" }
-    const aiText = data.response || "No response was returned from the server.";
-
-    // Replace the loading bubble with the formatted AI response
-    replaceLoadingWithResponse(loadingRow, aiText);
-
-  } catch (fetchError) {
-    console.error("[Crest AI] Fetch error:", fetchError);
-
-    // Replace loading bubble with a visible error message
-    replaceLoadingWithResponse(
-      loadingRow,
-      "Something went wrong reaching the server. Please try again in a moment."
-    );
-
-    showAlert("Could not reach Crest. Please check your connection and try again.");
-  } finally {
-    // --- Unlock the interface regardless of success or failure ---
-    AppState.isGenerating = false;
-    DOM.promptTextarea.removeAttribute("readonly");
-    setStatus("ready");
-
-    // Re-enable the send button only if the textarea has content
-    // (unlikely after reset, but safe to check)
-    const hasContent = DOM.promptTextarea.value.trim().length > 0;
-    DOM.promptSendBtn.disabled = !hasContent;
-    DOM.promptSendBtn.setAttribute("aria-disabled", String(!hasContent));
-  }
-}
-
-/* ---------------------------------------------------------------
-   15. USERNAME MODAL FLOW
---------------------------------------------------------------- */
-
-/**
- * Reveals the username setup modal overlay.
- * Removes the `.hidden` class so the CSS opacity transition fires.
- */
-function openUsernameModal() {
-  DOM.usernameModal.classList.remove("hidden");
-  // Focus the input for immediate keyboard entry
-  setTimeout(() => DOM.modalUsernameInput.focus(), 100);
-}
-
-/**
- * Hides the username setup modal overlay.
- * Adds the `.hidden` class to trigger the CSS fade-out transition.
- */
-function closeUsernameModal() {
-  DOM.usernameModal.classList.add("hidden");
-}
-
-/**
- * Validates the username string against the format rules:
- *  - 3 to 20 characters long.
- *  - Only letters, numbers, and underscores.
- * @param {string} value
- * @returns {{ valid: boolean, error: string }}
- */
-function validateUsernameFormat(value) {
-  if (!value || value.length < 3) {
-    return { valid: false, error: "Username must be at least 3 characters long." };
-  }
-  if (value.length > 20) {
-    return { valid: false, error: "Username cannot exceed 20 characters." };
-  }
-  if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-    return { valid: false, error: "Only letters, numbers, and underscores are allowed." };
-  }
-  return { valid: true, error: "" };
-}
-
-/**
- * Handles the "Complete Setup" button click inside the modal.
- *  1. Validates format.
- *  2. Checks database uniqueness.
- *  3. Upserts the username into the profiles table.
- *  4. Updates the sidebar label and closes the modal.
- */
-async function handleSaveUsername() {
-  const inputValue   = DOM.modalUsernameInput.value.trim();
-  const errorDisplay = DOM.modalErrorText;
-  const saveBtn      = DOM.saveUsernameBtn;
-
-  // Clear any previous error
-  errorDisplay.textContent = "";
-
-  // --- Format validation ---
-  const { valid, error } = validateUsernameFormat(inputValue);
-  if (!valid) {
-    errorDisplay.textContent = error;
-    DOM.modalUsernameInput.focus();
-    return;
-  }
-
-  // --- Lock the button to prevent double-clicks ---
-  saveBtn.disabled     = true;
-  saveBtn.textContent  = "Checking...";
-
-  try {
-    // --- Check uniqueness: query for any profile with this username ---
-    const { data: existingProfiles, error: checkError } = await supabaseClient
-      .from("profiles")
-      .select("id")
-      .eq("username", inputValue)
-      .limit(1);
-
-    if (checkError) throw checkError;
-
-    if (existingProfiles && existingProfiles.length > 0) {
-      // Username already taken
-      errorDisplay.textContent = "That username is already taken. Please choose another.";
-      saveBtn.disabled    = false;
-      saveBtn.textContent = "Complete Setup";
-      DOM.modalUsernameInput.focus();
-      return;
-    }
-
-    // --- Upsert the username into the authenticated user's profile row ---
-    const { error: upsertError } = await supabaseClient
-      .from("profiles")
-      .upsert({ id: AppState.user.id, username: inputValue });
-
-    if (upsertError) throw upsertError;
-
-    // --- Update the sidebar profile label with the new username ---
-    DOM.profileLabel.textContent = inputValue;
-
-    // --- Close the modal ---
-    closeUsernameModal();
-
-    showAlert(`Welcome to Crest, ${inputValue}.`);
-
-  } catch (err) {
-    console.error("[Crest AI] Username save error:", err);
-    errorDisplay.textContent = "An error occurred. Please try again.";
-    saveBtn.disabled    = false;
-    saveBtn.textContent = "Complete Setup";
-  }
-}
-
-/* ---------------------------------------------------------------
-   16. AUTHENTICATION FLOW
---------------------------------------------------------------- */
-
-/**
- * Checks for an active Supabase session.
- * If none exists, bounces the user to the login page.
- * If authenticated, loads the user profile and initialises the UI.
+ * Main application initialization pipeline gate checker. Runs immediately on load.
  */
 async function checkAuthAndInit() {
   try {
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
-
-    if (sessionError || !sessionData?.session) {
-      // No active session — redirect to the login page
+    // 1. Instantly pull active tokens from memory layout
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    
+    if (sessionError) throw sessionError;
+    
+    // Bounce user back to login matrix if tokens are unverified
+    if (!session || !session.user) {
+      console.warn("Unauthenticated session connection vector. Relocating context path to login page.");
       window.location.href = "/pages/auth/login.html";
       return;
     }
+    
+    appState.currentUser = session.user;
+    
+    // Set fallback display text to target profile email string
+    if (dom.userEmailLabel && appState.currentUser.email) {
+      dom.userEmailLabel.textContent = appState.currentUser.email;
+    }
+    
+    // 2. Query public data records to match custom user configurations
+    await loadUserProfileAndValidateIdentity();
 
-    // Store the user object in AppState for use throughout the app
-    AppState.user = sessionData.session.user;
+  } catch (err) {
+    console.error("Critical identity core session exception routing:", err.message);
+    showAlert("Authentication handshake exception. Please try running an account re-login.", 0);
+  }
+}
 
-    // --- Pre-populate the sidebar label with the email as a fallback ---
-    const email = AppState.user.email || "Account";
-    DOM.profileLabel.textContent = email;
-
-    // --- Query the profiles table for an existing username ---
-    const { data: profileData, error: profileError } = await supabaseClient
+/**
+ * Scans relational rows inside public user metadata profiles table context layout.
+ */
+async function loadUserProfileAndValidateIdentity() {
+  try {
+    const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("username")
-      .eq("id", AppState.user.id)
-      .single();
+      .eq("id", appState.currentUser.id)
+      .maybeSingle(); // Returns null cleanly instead of raising error alerts if empty
 
-    if (profileError && profileError.code !== "PGRST116") {
-      // PGRST116 = no rows returned (normal for new users) — any other
-      // error is unexpected and should be logged.
-      console.error("[Crest AI] Profile fetch error:", profileError);
-    }
+    if (profileError) throw profileError;
 
-    if (profileData?.username) {
-      // Username exists — update the sidebar with the real username
-      DOM.profileLabel.textContent = profileData.username;
+    // Trigger username config choice selection if profile string returns blank parameters
+    if (!profile || !profile.username) {
+      displayUsernameSetupModal(true);
     } else {
-      // No username set — open the first-run setup modal
-      openUsernameModal();
+      // Overwrite the lower user details with their confirmed unique custom name parameter
+      if (dom.userEmailLabel) {
+        dom.userEmailLabel.textContent = profile.username;
+      }
+      displayUsernameSetupModal(false);
+    }
+  } catch (err) {
+    console.error("Profile row resolution sync variance exception:", err.message);
+    // Open selection parameters fallback frame loop as protective security structure step
+    displayUsernameSetupModal(true);
+  }
+}
+
+/* ---------------------------------------------------------------
+   7. USERNAME MODAL GATING PIPELINE (FIXED UPSERT LOGIC)
+--------------------------------------------------------------- */
+
+/**
+ * Controls visual presentation settings for account initialization username modal frame layers.
+ * @param {boolean} showModal - Toggle status vector parameter.
+ */
+function displayUsernameSetupModal(showModal) {
+  if (!dom.usernameModal) return;
+  if (showModal) {
+    dom.usernameModal.classList.add("visible");
+  } else {
+    dom.usernameModal.classList.remove("visible");
+  }
+}
+
+/**
+ * Displays error strings cleanly inside modal viewport validation sub-layers.
+ * @param {string} errorTextString - String to print.
+ */
+function showModalError(errorTextString) {
+  if (dom.modalError) {
+    dom.modalError.textContent = errorTextString;
+    dom.modalError.classList.add("visible");
+  }
+}
+
+/**
+ * Clears active warnings inside validation elements.
+ */
+function clearModalError() {
+  if (dom.modalError) {
+    dom.modalError.textContent = "";
+    dom.modalError.classList.remove("visible");
+  }
+}
+
+/**
+ * Submits custom unique identity strings back to table architectures.
+ * Uses .upsert with onConflict targeting the primary key 'id' to fix Google login loop bugs.
+ */
+async function handleUsernameFormSubmission() {
+  if (!dom.modalInput || !dom.modalSubmitBtn) return;
+  
+  const chosenUsername = dom.modalInput.value.trim();
+  clearModalError();
+  
+  // Validation constraints checking pass
+  if (!chosenUsername) {
+    showModalError("Username cannot be left entirely blank.");
+    return;
+  }
+  if (chosenUsername.length < 3) {
+    showModalError("Username must contain at least 3 characters.");
+    return;
+  }
+  if (chosenUsername.length > 20) {
+    showModalError("Username cannot exceed 20 characters maximum bounds.");
+    return;
+  }
+  
+  // Alphanumeric validation step filter rule
+  const contentFilterRegex = /^[a-zA-Z0-9_]+$/;
+  if (!contentFilterRegex.test(chosenUsername)) {
+    showModalError("Username can only contain alphanumeric characters and underscores.");
+    return;
+  }
+  
+  try {
+    // Lock submit visual states while updating records across columns
+    dom.modalSubmitBtn.disabled = true;
+    dom.modalSubmitBtn.textContent = "Securing Identity Row...";
+    
+    // Check if the unique string parameter is already owned by another active user profile row
+    const { data: profileCollisionCheck, error: queryError } = await supabaseClient
+      .from("profiles")
+      .select("username")
+      .eq("username", chosenUsername)
+      .maybeSingle();
+      
+    if (queryError) throw queryError;
+    
+    if (profileCollisionCheck) {
+      showModalError("This custom username is already taken. Please pick another one.");
+      dom.modalSubmitBtn.disabled = false;
+      dom.modalSubmitBtn.textContent = "Complete Setup";
+      return;
+    }
+    
+    // CRITICAL BUGFIX: Use .upsert with onConflict logic to ensure Google login data synchronizes perfectly
+    const { error: upsertError } = await supabaseClient
+      .from("profiles")
+      .upsert(
+        { 
+          id: appState.currentUser.id, 
+          username: chosenUsername 
+        }, 
+        { onConflict: 'id' }
+      );
+      
+    if (upsertError) throw upsertError;
+    
+    // Sync completed successfully — overwrite profile names, disable and close down modal system frames
+    if (dom.userEmailLabel) {
+      dom.userEmailLabel.textContent = chosenUsername;
+    }
+    
+    displayUsernameSetupModal(false);
+    showAlert("Workspace setup successfully completed. Welcome to Crest AI!", 4000);
+
+  } catch (err) {
+    console.error("Database writing profile registration crash exception:", err.message);
+    showModalError("Failed to update identity parameters. Please try again.");
+  } finally {
+    if (dom.modalSubmitBtn) {
+      dom.modalSubmitBtn.disabled = false;
+      dom.modalSubmitBtn.textContent = "Complete Setup";
+    }
+  }
+}
+
+/* ---------------------------------------------------------------
+   8. TEXTAREA INTERACTIVE ELASTIC ELEMENT RESIZING ENGINE
+--------------------------------------------------------------- */
+
+/**
+ * Computes live string character parameter limits, resetting sizes vertically as content expands.
+ */
+function handleTextareaInputLifecycle() {
+  if (!dom.promptTextarea || !dom.charCounter || !dom.promptSendBtn) return;
+  
+  const fieldInputValue = dom.promptTextarea.value;
+  const metricsLength = fieldInputValue.length;
+  
+  // Render metrics balance context strings instantly
+  dom.charCounter.textContent = `${metricsLength} / 4000`;
+  
+  // Handle layout boundary expansion calculations cleanly
+  dom.promptTextarea.style.height = "24px"; // Baseline row bounds
+  const calculatedHeightBoundary = Math.min(dom.promptTextarea.scrollHeight, 160);
+  dom.promptTextarea.style.height = `${calculatedHeightBoundary}px`;
+  
+  // Handle visual tracking switches for text submission buttons
+  const normalizedVerificationContent = fieldInputValue.trim();
+  if (normalizedVerificationContent.length > 0 && !appState.isGenerating) {
+    dom.promptSendBtn.disabled = false;
+    dom.promptSendBtn.removeAttribute("aria-disabled");
+  } else {
+    dom.promptSendBtn.disabled = true;
+    dom.promptSendBtn.setAttribute("aria-disabled", "true");
+  }
+}
+
+/**
+ * Force resets interactive text input forms cleanly back to standard baseline layout configurations.
+ */
+function performInputFormLayoutReset() {
+  if (!dom.promptTextarea || !dom.promptSendBtn || !dom.charCounter) return;
+  
+  dom.promptTextarea.value = "";
+  dom.promptTextarea.style.height = "24px";
+  dom.charCounter.textContent = "0 / 4000";
+  
+  dom.promptSendBtn.disabled = true;
+  dom.promptSendBtn.setAttribute("aria-disabled", "true");
+}
+
+/* ---------------------------------------------------------------
+   9. VIEWPORT VISUAL SCROLL POSITIONING LOGIC
+--------------------------------------------------------------- */
+
+/**
+ * Anchors display layout windows firmly to the latest message card components dynamically.
+ * Uses a small frame timeout calculation to let new element node render streams finish loading first.
+ */
+function forceScrollAreaToCalculatedBottom() {
+  if (!dom.chatScrollArea) return;
+  setTimeout(() => {
+    dom.chatScrollArea.scrollTo({
+      top: dom.chatScrollArea.scrollHeight,
+      behavior: "smooth"
+    });
+  }, 30);
+}
+
+/* ---------------------------------------------------------------
+   10. DAILY SYSTEM ALLOCATION QUOTA METRIC COUNTERS
+--------------------------------------------------------------- */
+
+/**
+ * Re-renders metric metadata count indicators across panel layout views.
+ */
+function updateQuotaDisplay() {
+  if (!dom.quotaDisplay) return;
+  dom.quotaDisplay.textContent = `${appState.remainingQuota} remaining requests`;
+}
+
+/* ---------------------------------------------------------------
+   11. DATA COMPONENT INTERFACE INJECTION RENDER GENERATOR
+--------------------------------------------------------------- */
+
+/**
+ * Injects conversational node bubbles into the scrolling history layouts.
+ * @param {string} messageContentText - Text body data string to display.
+ * @param {string} speakerIdentityNode - "user" or "ai" categorization target.
+ * @param {boolean} isLoaderStub - If true, assigns special layout animation anchors.
+ * @returns {string} Unique target string element reference ID key.
+ */
+function appendStructuralMessageBubbleFrame(messageContentText, speakerIdentityNode, isLoaderStub = false) {
+  if (!dom.chatThreadContainer) return null;
+  
+  const wrapperNodeFrame = document.createElement("div");
+  const systemGeneratedBubbleId = "msg_node_" + Math.random().toString(36).substr(2, 9);
+  
+  wrapperNodeFrame.id = systemGeneratedBubbleId;
+  wrapperNodeFrame.className = `message-wrapper ${speakerIdentityNode}-wrapper`;
+  
+  // Create beautiful inline vector asset elements to prevent asset 404 connection bugs
+  const elementAvatarGraphicsSVG = speakerIdentityNode === "user"
+    ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+         <path d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z" fill="currentColor"/>
+         <path d="M8 9C5.33 9 0 10.34 0 13V16H16V13C16 10.34 10.67 9 8 9Z" fill="currentColor"/>
+       </svg>`
+    : `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+         <path d="M8 1L1 14H15L8 1Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+         <circle cx="8" cy="10" r="1.5" fill="currentColor"/>
+       </svg>`;
+
+  const displayLabelString = speakerIdentityNode === "user" ? "YOU" : "CREST";
+
+  wrapperNodeFrame.innerHTML = `
+    <div class="message-meta-strip">
+      <div class="identity-avatar-container" aria-hidden="true">
+        ${elementAvatarGraphicsSVG}
+      </div>
+      <span class="meta-identity-label">${displayLabelString}</span>
+    </div>
+    <div class="message-bubble-body">
+      <div class="rich-text-markdown-payload-container">
+        <p>${messageContentText}</p>
+      </div>
+    </div>
+  `;
+  
+  if (isLoaderStub) {
+    wrapperNodeFrame.classList.add("system-pipeline-loader-active");
+  }
+  
+  dom.chatThreadContainer.appendChild(wrapperNodeFrame);
+  forceScrollAreaToCalculatedBottom();
+  
+  return systemGeneratedBubbleId;
+}
+
+/**
+ * Removes temporary processing animation stubs instantly.
+ * @param {string} targetedNodeIdString - The unique dynamic ID key of the element.
+ */
+function stripTargetedLoadingBubbleFrame(targetedNodeIdString) {
+  if (!targetedNodeIdString) return;
+  const loadingTargetNode = document.getElementById(targetedNodeIdString);
+  if (loadingTargetNode) {
+    loadingTargetNode.remove();
+  }
+}
+
+/* ---------------------------------------------------------------
+   12. NETWORK PAYLOAD FETCH DISPATCH CONSOLE LOGIC
+--------------------------------------------------------------- */
+
+/**
+ * Transmits user queries securely through remote secure Cloudflare edge worker tunnels.
+ * @param {string} rawMessageString - Raw user prompt payload data.
+ * @returns {Promise<string>} Core model response resolution string data.
+ */
+async function executeCloudflareSecureRoutingPipeline(rawMessageString) {
+  try {
+    const networkResponseStream = await fetch(BACKEND_WORKER_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: rawMessageString })
+    });
+
+    if (!networkResponseStream.ok) {
+      throw new Error(`Worker endpoint connection exception status: ${networkResponseStream.status}`);
     }
 
-  } catch (authErr) {
-    console.error("[Crest AI] Auth init error:", authErr);
-    // Bounce to login on any unrecoverable auth error
-    window.location.href = "/pages/auth/login.html";
+    const outputPayloadJSON = await networkResponseStream.json();
+    
+    if (outputPayloadJSON && outputPayloadJSON.response) {
+      return outputPayloadJSON.response;
+    } else {
+      throw new Error("Empty text generation token streams returned from server endpoints.");
+    }
+
+  } catch (err) {
+    console.error("Cloudflare Worker Routing Exception Failure:", err.message);
+    return "I encountered a minor connection variance while trying to reach the response system. Please submit your prompt again.";
   }
 }
 
 /**
- * Signs the current user out via Supabase Auth and redirects to login.
+ * Core form execution pipeline. Dispatches message payloads downstream.
  */
-async function handleSignOut() {
+async function dispatchUserPromptInputVector() {
+  if (appState.isGenerating || !dom.promptTextarea) return;
+  
+  const finalizedPromptPayload = dom.promptTextarea.value.trim();
+  if (!finalizedPromptPayload) return;
+  
+  // Check if session limits are exhausted
+  if (appState.remainingQuota <= 0) {
+    showAlert("Your daily request limits have been completely exhausted. Please wait for the balance reset window.", 6000);
+    return;
+  }
+  
   try {
-    await supabaseClient.auth.signOut();
-  } catch (e) {
-    console.warn("[Crest AI] Sign-out error:", e);
+    // 1. Engage UI state processing locks
+    appState.isGenerating = true;
+    if (dom.promptSendBtn) {
+      dom.promptSendBtn.disabled = true;
+      dom.promptSendBtn.setAttribute("aria-disabled", "true");
+    }
+    if (dom.statusText) dom.statusText.textContent = "Thinking...";
+    
+    // Clear initial dashboards out of the workspace window view
+    if (dom.emptyWelcomeState) dom.emptyWelcomeState.style.display = "none";
+    
+    // 2. Render user text entry frames immediately
+    appendStructuralMessageBubbleFrame(finalizedPromptPayload, "user");
+    
+    // Clean text fields and reset inputs immediately to prevent layout double inputs
+    performInputFormLayoutReset();
+    
+    // 3. Subtract transaction metrics data logs balance from counter
+    appState.remainingQuota = Math.max(0, appState.remainingQuota - 1);
+    updateQuotaDisplay();
+    
+    // 4. Attach an active animated generating block frame to user viewports
+    const responseLoadingPlaceholderKey = appendStructuralMessageBubbleFrame("Generating response string matrix parameters...", "ai", true);
+    
+    // 5. Fire asynchronous request out to remote workers
+    const generationResultText = await executeCloudflareSecureRoutingPipeline(finalizedPromptPayload);
+    
+    // 6. Clear out loading animations and map final strings cleanly into views
+    stripTargetedLoadingBubbleFrame(responseLoadingPlaceholderKey);
+    appendStructuralMessageBubbleFrame(generationResultText, "ai");
+
+  } catch (err) {
+    console.error("Workspace prompt transmission pipeline execution failure:", err.message);
+    showAlert("Failed to route generation payload cleanly. Please try submitting your message query again.");
   } finally {
-    window.location.href = "/pages/auth/login.html";
+    // Release system configuration visual locks
+    appState.isGenerating = false;
+    if (dom.statusText) dom.statusText.textContent = "Ready";
+    handleTextareaInputLifecycle(); // Re-calculates button states based on text length
   }
 }
 
 /* ---------------------------------------------------------------
-   17. MOBILE SIDEBAR MANAGEMENT
+   13. RESPONSIBILITY TRIGGER HANDLERS LISTENER SCHEDULER
 --------------------------------------------------------------- */
 
 /**
- * Injects and manages the overlay scrim element used behind the
- * sidebar on mobile. Created lazily on first call.
- * @returns {HTMLElement} The scrim DOM node.
- */
-function getOrCreateScrim() {
-  let scrim = document.getElementById("sidebarScrim");
-  if (!scrim) {
-    scrim = document.createElement("div");
-    scrim.id = "sidebarScrim";
-    scrim.classList.add("sidebar-scrim");
-    // Clicking the scrim closes the sidebar
-    scrim.addEventListener("click", closeMobileSidebar);
-    document.body.appendChild(scrim);
-  }
-  return scrim;
-}
-
-/**
- * Opens the sidebar on mobile by adding the `.open` class and
- * showing the scrim overlay.
- */
-function openMobileSidebar() {
-  DOM.chatSidebar.classList.add("open");
-  getOrCreateScrim().classList.add("visible");
-  DOM.mobileMenuToggleBtn.setAttribute("aria-expanded", "true");
-}
-
-/**
- * Closes the sidebar on mobile and hides the scrim.
- */
-function closeMobileSidebar() {
-  DOM.chatSidebar.classList.remove("open");
-  const scrim = document.getElementById("sidebarScrim");
-  if (scrim) scrim.classList.remove("visible");
-  DOM.mobileMenuToggleBtn.setAttribute("aria-expanded", "false");
-}
-
-/* ---------------------------------------------------------------
-   18. SUGGESTION CARD HANDLER
---------------------------------------------------------------- */
-
-/**
- * When a suggestion card is clicked, populate the textarea with
- * the card's data-suggestion text, trigger the input handler to
- * enable the send button and expand height, then focus the textarea.
- * @param {MouseEvent} event
+ * Handles text updates when clicking suggestion option elements shortcut cards.
+ * @param {Event} event - Mouse input click tracking coordinate parameters.
  */
 function handleSuggestionCardClick(event) {
-  const card = event.currentTarget;
-  const suggestion = card.getAttribute("data-suggestion") || "";
-
-  if (!suggestion) return;
-
-  DOM.promptTextarea.value = suggestion;
-  // Trigger the resize + button-enable logic
-  handleTextareaInput();
-  DOM.promptTextarea.focus();
-  // Move caret to the end of the inserted text
-  DOM.promptTextarea.setSelectionRange(suggestion.length, suggestion.length);
-}
-
-/* ---------------------------------------------------------------
-   19. KEYBOARD SHORTCUTS
---------------------------------------------------------------- */
-
-/**
- * Handles keydown events on the textarea.
- *  - Enter (without Shift) submits the form.
- *  - Shift+Enter inserts a newline (default behaviour — no action needed).
- * @param {KeyboardEvent} event
- */
-function handleTextareaKeydown(event) {
-  if (event.key === "Enter" && !event.shiftKey) {
-    // Prevent the default newline insertion
-    event.preventDefault();
-
-    // Only submit if the button is currently active
-    if (!DOM.promptSendBtn.disabled && !AppState.isGenerating) {
-      DOM.promptSubmitForm.requestSubmit();
-    }
+  const selectedSuggestionCardNode = event.currentTarget;
+  const promptParagraphContentElement = selectedSuggestionCardNode.querySelector(".suggestion-card__desc");
+  
+  if (promptParagraphContentElement && dom.promptTextarea) {
+    dom.promptTextarea.value = promptParagraphContentElement.textContent.trim();
+    dom.promptTextarea.focus();
+    handleTextareaInputLifecycle();
   }
 }
 
-/* ---------------------------------------------------------------
-   20. NEW CHAT / RESET CONVERSATION
---------------------------------------------------------------- */
-
 /**
- * Clears the chat thread, resets AppState flags, shows the welcome
- * state again, and resets the textarea. Allows starting fresh.
+ * Toggles structural mobile phone display navigation overlays.
+ * @param {boolean} openSidebarState - Toggle identifier direction index.
  */
-function handleNewChat() {
-  // Clear all rendered messages
-  DOM.chatThreadContainer.innerHTML = "";
-
-  // Reset conversation tracking
-  AppState.hasStartedConversation = false;
-  AppState.isGenerating           = false;
-
-  // Show the welcome state again
-  DOM.emptyWelcomeState.classList.remove("hidden");
-
-  // Reset the textarea and send button
-  resetTextarea();
-  setStatus("ready");
-
-  // Close the sidebar on mobile after tapping "New conversation"
-  closeMobileSidebar();
-
-  // Focus the input
-  DOM.promptTextarea.focus();
+function toggleMobileSidebarState(openSidebarState) {
+  if (!dom.chatSidebar || !dom.sidebarScrim) return;
+  if (openSidebarState) {
+    dom.chatSidebar.classList.add("open");
+    dom.sidebarScrim.classList.add("visible");
+  } else {
+    dom.chatSidebar.classList.remove("open");
+    dom.sidebarScrim.classList.remove("visible");
+  }
 }
 
-/* ---------------------------------------------------------------
-   21. EVENT LISTENER REGISTRATION
---------------------------------------------------------------- */
-
 /**
- * Registers all event listeners after DOM references are bound.
- * Groups handlers by feature area for clarity.
+ * Global router directory management assigning runtime interface controllers to their listeners.
  */
 function registerEventListeners() {
-  // --- Alert banner dismiss ---
-  DOM.alertDismissBtn.addEventListener("click", dismissAlert);
+  // Alert dismiss banner controls click map bind
+  if (dom.alertDismissBtn) {
+    dom.alertDismissBtn.addEventListener("click", dismissAlert);
+  }
 
-  // --- Textarea dynamic resize + button enable/disable ---
-  DOM.promptTextarea.addEventListener("input", handleTextareaInput);
+  // Identity username confirmation buttons click map bind
+  if (dom.modalSubmitBtn) {
+    dom.modalSubmitBtn.addEventListener("click", handleUsernameFormSubmission);
+  }
+  if (dom.modalInput) {
+    dom.modalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleUsernameFormSubmission();
+      }
+    });
+  }
 
-  // --- Enter key submits the form (Shift+Enter for newline) ---
-  DOM.promptTextarea.addEventListener("keydown", handleTextareaKeydown);
+  // Multi-line elastic text entry window lifecycle tracking binds
+  if (dom.promptTextarea) {
+    dom.promptTextarea.addEventListener("input", handleTextareaInputLifecycle);
+    
+    dom.promptTextarea.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (dom.promptSendBtn && !dom.promptSendBtn.disabled && !appState.isGenerating) {
+          dispatchUserPromptInputVector();
+        }
+      }
+    });
+  }
 
-  // --- Form submission ---
-  DOM.promptSubmitForm.addEventListener("submit", handlePromptSubmit);
+  // Intercept execution pathways across prompt submission modules
+  if (dom.promptSubmitForm) {
+    dom.promptSubmitForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      dispatchUserPromptInputVector();
+    });
+  }
 
-  // --- Username modal confirm ---
-  DOM.saveUsernameBtn.addEventListener("click", handleSaveUsername);
+  // Mobile hamburger viewport layout sidebar toggles map binds
+  if (dom.mobileMenuToggle) {
+    dom.mobileMenuToggle.addEventListener("click", () => toggleMobileSidebarState(true));
+  }
+  if (dom.sidebarCloseBtn) {
+    dom.sidebarCloseBtn.addEventListener("click", () => toggleMobileSidebarState(false));
+  }
+  if (dom.sidebarScrim) {
+    dom.sidebarScrim.addEventListener("click", () => toggleMobileSidebarState(false));
+  }
 
-  // --- Allow Enter key in the modal username input to trigger save ---
-  DOM.modalUsernameInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      handleSaveUsername();
-    }
-  });
+  // Fresh workspace dialogue clear command button bind
+  if (dom.newChatBtn) {
+    dom.newChatBtn.addEventListener("click", () => {
+      if (dom.chatThreadContainer) dom.chatThreadContainer.innerHTML = "";
+      if (dom.emptyWelcomeState) dom.emptyWelcomeState.style.display = "block";
+      dismissAlert();
+      toggleMobileSidebarState(false);
+    });
+  }
 
-  // --- Sign out ---
-  DOM.signOutBtn.addEventListener("click", handleSignOut);
-
-  // --- New conversation ---
-  DOM.newChatBtn.addEventListener("click", handleNewChat);
-
-  // --- Mobile sidebar open (hamburger) ---
-  DOM.mobileMenuToggleBtn.addEventListener("click", openMobileSidebar);
-
-  // --- Mobile sidebar close (X button inside sidebar) ---
-  DOM.closeSidebarBtn.addEventListener("click", closeMobileSidebar);
-
-  // --- Suggestion cards ---
-  DOM.suggestionCards.forEach((card) => {
+  // Shortcut dashboard prompt hint options iteration block bind
+  const suggestionCardsList = document.querySelectorAll(".suggestion-card");
+  suggestionCardsList.forEach(card => {
     card.addEventListener("click", handleSuggestionCardClick);
   });
 }
 
 /* ---------------------------------------------------------------
-   22. APPLICATION BOOT SEQUENCE
+   14. SYSTEM ENTRY RUNTIME BOOTSTRAPPING FLOW
 --------------------------------------------------------------- */
 
 /**
- * Top-level initialiser. Called on DOMContentLoaded.
- * Runs the full startup sequence in order:
- *   1. Bind DOM references.
- *   2. Register all event listeners.
- *   3. Initialise quota display.
- *   4. Check auth state and load user profile.
+ * Master interface boot initialization engine scheduler.
  */
 async function initApp() {
-  // 1. Bind all DOM element references
+  // 1. Build and bind active DOM element pointer matrices
   bindDOMReferences();
 
-  // 2. Register event listeners
+  // 2. Schedule structural events listeners map matrices
   registerEventListeners();
 
-  // 3. Initialise the quota display with the max value
+  // 3. Sync allocation counters to target display values
   updateQuotaDisplay();
 
-  // 4. Guard: abort if Supabase failed to initialise
+  // 4. Fallback safeguard check: block page load events if Supabase client did not connect
   if (!supabaseClient) {
     showAlert(
-      "Failed to connect to the authentication service. Please refresh the page.",
-      0 // Persist indefinitely — no auto-dismiss
+      "Failed to establish a connection with the backend authentication service. Please refresh your browser window page context.",
+      0 // Maintain banner status visible locked permanently over screens
     );
     return;
   }
 
-  // 5. Run the auth gate — checks session, loads profile, opens modal if needed
+  // 5. Initiate session token auth checks and verify username tables
   await checkAuthAndInit();
 }
 
-/* ---------------------------------------------------------------
-   23. ENTRY POINT
---------------------------------------------------------------- */
-
 /**
- * Wait for the full DOM to be ready before bootstrapping the app.
- * This ensures all elements referenced by bindDOMReferences() exist.
+ * Hold thread processing queues until the browser DOM element index tree maps are completely populated.
  */
 document.addEventListener("DOMContentLoaded", initApp);
