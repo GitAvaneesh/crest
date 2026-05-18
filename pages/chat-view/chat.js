@@ -2,7 +2,6 @@
 // CREST AI — RECURSIVE REAL-TIME WORKSPACE PIPELINE CONTROLLER ENGINE
 // =========================================================================
 
-// Initialize Supabase Client using your exact production credentials
 const SUPABASE_URL = "https://arydgubakjbbgijfgqee.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeWRndWJha2piYmdpamZncWVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwMTk0ODAsImV4cCI6MjA5NDU5NTQ4MH0.l_qLFevXcY7Ss8Qh4UN8_Rupl761woxiVuRhCFZsTpM";
 
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 class CrestWorkspaceEngine {
   constructor() {
-    // ── DATA AND DOM REFERENCE OBJECT BINDING ──
     this.dom = {
       form: document.getElementById('promptSubmitForm'),
       textarea: document.getElementById('promptTextarea'),
@@ -47,11 +45,10 @@ class CrestWorkspaceEngine {
       userEmailLabel: document.getElementById('userProfileEmailDisplayLabel')
     };
 
-    // Runtime state tracking configuration matrices
     this.state = {
       activeSessionUser: null,
       activeConversationThreadId: null,
-      activeEngineModel: 'gemini', // Cascades down automatically to Llama fallbacks inside Cloudflare
+      activeEngineModel: 'gemini',
       isProcessingPayload: false,
       dailyQuotaBalance: 100
     };
@@ -65,7 +62,6 @@ class CrestWorkspaceEngine {
       return;
     }
 
-    // Authenticate user session structure
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error || !session) {
       console.warn("Unauthorized terminal trace. Intercepting and rerouting to auth...");
@@ -84,7 +80,6 @@ class CrestWorkspaceEngine {
   }
 
   bindInterfaceEvents() {
-    // Submit prompt dispatch hook
     if (this.dom.form) {
       this.dom.form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -92,7 +87,6 @@ class CrestWorkspaceEngine {
       });
     }
 
-    // Dynamic field scaling and metric monitoring hooks
     if (this.dom.textarea) {
       this.dom.textarea.addEventListener('input', () => {
         this.resizeInputTextareaHeightDynamically();
@@ -102,14 +96,13 @@ class CrestWorkspaceEngine {
       this.dom.textarea.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          if (!this.dom.sendBtn.disabled) {
+          if (this.dom.sendBtn && !this.dom.sendBtn.disabled) {
             this.dispatchUserPromptInputVector();
           }
         }
       });
     }
 
-    // Mobile UI Viewport adjustment anchors
     if (this.dom.mobileMenuToggle) {
       this.dom.mobileMenuToggle.addEventListener('click', () => this.toggleMobileSidebarState(true));
     }
@@ -117,7 +110,13 @@ class CrestWorkspaceEngine {
       this.dom.closeSidebarBtn.addEventListener('click', () => this.toggleMobileSidebarState(false));
     }
 
-    // Suggestion box grid insertion handler
+    if (this.dom.newChatBtn) {
+      this.dom.newChatBtn.addEventListener('click', () => {
+        if (this.dom.chatContainer) this.dom.chatContainer.innerHTML = '';
+        if (this.dom.emptyState) this.dom.emptyState.style.display = 'block';
+      });
+    }
+
     document.querySelectorAll('.prompt-suggestion-card').forEach(card => {
       card.addEventListener('click', () => {
         const structuralPromptString = card.querySelector('p').textContent;
@@ -155,7 +154,7 @@ class CrestWorkspaceEngine {
       this.dom.charCounter.style.color = 'var(--color-error-red)';
       this.dom.sendBtn.disabled = true;
     } else {
-      this.dom.charCounter.style.color = 'var(--color-muted-gray)';
+      this.dom.charCounter.style.color = 'var(--color-text-muted)';
       this.dom.sendBtn.disabled = stringLengthMetric === 0 || this.state.isProcessingPayload;
     }
   }
@@ -168,22 +167,12 @@ class CrestWorkspaceEngine {
     });
   }
 
-  triggerTopAlertNotification(warningTextString, themeType = 'error') {
+  triggerTopAlertNotification(warningTextString) {
     if (!this.dom.alertBanner || !this.dom.alertText) return;
     this.dom.alertText.textContent = warningTextString;
     this.dom.alertBanner.style.display = 'block';
-    
-    if (themeType === 'error') {
-      this.dom.alertBanner.style.backgroundColor = '#ffe4e6';
-      this.dom.alertBanner.style.borderColor = 'var(--color-error-red)';
-    } else {
-      this.dom.alertBanner.style.backgroundColor = '#f0fdf4';
-      this.dom.alertBanner.style.borderColor = 'var(--color-success-green)';
-    }
-    this.forceScrollAreaToCalculatedBottom();
   }
 
-  // ── TUNNELED COMMUNICATOR MATRIX WITH INTEL-FAILOVER HUB ──
   async executeCloudflareSecureRoutingPipeline(rawMessageString) {
     try {
       const response = await fetch(BACKEND_WORKER_URL, {
@@ -202,8 +191,8 @@ class CrestWorkspaceEngine {
       return data.response;
 
     } catch (pipelineError) {
-      console.error("Critical Tunnel Failure Intercepted:", pipelineError.message);
-      return "✨ Crest is currently busy or handling a high volume of neural streams. Please give our core matrix a moment to clear up and try your prompt again!";
+      console.error("Tunnel Failure:", pipelineError.message);
+      return "Crest is currently busy or handling a high volume of neural streams. Please give our core matrix a moment to clear up and try your prompt again!";
     }
   }
 
@@ -213,45 +202,36 @@ class CrestWorkspaceEngine {
     const userPromptText = this.dom.textarea.value.trim();
     if (!userPromptText) return;
 
-    // Reset processing locks and input heights
     this.state.isProcessingPayload = true;
     this.dom.textarea.value = '';
     this.resizeInputTextareaHeightDynamically();
     this.updateCharacterMetricCounters();
 
-    // Toggle out empty initial splash layout dynamically
-    if (this.dom.emptyState && this.dom.emptyState.style.display !== 'none') {
+    if (this.dom.emptyState) {
       this.dom.emptyState.style.display = 'none';
     }
 
     if (this.dom.statusText) {
-      this.dom.statusText.textContent = "Pipeline Active: Analyzing via Safety GPT...";
+      this.dom.statusText.textContent = "Pipeline Active: Analyzing Neural Streams...";
     }
 
-    // Append user node directly to structural frame viewport arrays
     this.appendStructuralMessageBubbleFrame(userPromptText, 'user');
-
-    // Generate loading shell node placeholder
     const processingLoadingStubId = this.appendStructuralMessageBubbleFrame('Synthesizing Neural Metrics...', 'ai', true);
 
-    // Track stream usage counters
     this.state.dailyQuotaBalance = Math.max(0, this.state.dailyQuotaBalance - 1);
     if (this.dom.quotaDisplay) {
       this.dom.quotaDisplay.textContent = `Daily System Allocation Balance: ${this.state.dailyQuotaBalance} / 100 Free Nodes Transacted`;
     }
 
-    // Fire actual remote network pipeline request
     const targetedGenerationResult = await this.executeCloudflareSecureRoutingPipeline(userPromptText);
 
-    // Strip indicator node out and update frame with the secure token payload block text
     this.stripTargetedLoadingBubbleFrame(processingLoadingStubId);
     this.appendStructuralMessageBubbleFrame(targetedGenerationResult, 'ai');
 
-    // Unlock runtime transaction drivers
     this.state.isProcessingPayload = false;
     this.updateCharacterMetricCounters();
     if (this.dom.statusText) {
-      this.dom.statusText.textContent = "Pipeline Idle: Pipeline Node Steady";
+      this.dom.statusText.textContent = "Pipeline Node Steady";
     }
   }
 
@@ -263,13 +243,15 @@ class CrestWorkspaceEngine {
     wrapperNodeFrame.id = systemGeneratedBubbleId;
     wrapperNodeFrame.className = `message-wrapper ${speakerIdentityNode}-wrapper`;
 
-    // Replicate your clean neo-brutalist avatar and layout specifications exactly
+    // Premium inline asset paths matching your exact visual targets
     wrapperNodeFrame.innerHTML = `
       <div class="message-meta-strip">
         <div class="identity-avatar-container">
-          <img src="${speakerIdentityNode === 'user' ? '/assets/images/user-avatar.svg' : '/assets/images/crest-avatar-white.svg'}" 
-               alt="${speakerIdentityNode === 'user' ? 'User Icon' : 'Crest Vector Framework Identity'}" 
-               class="avatar-vector-graphic">
+          <svg viewBox="0 0 24 24" style="width:12px; height:12px; fill:var(--color-text-muted);">
+            ${speakerIdentityNode === 'user' 
+              ? '<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>' 
+              : '<path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99z"/>'}
+          </svg>
         </div>
         <span class="meta-identity-label">${speakerIdentityNode === 'user' ? 'Local Matrix User' : 'Crest Multi-Model Synapse'}</span>
       </div>
