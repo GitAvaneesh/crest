@@ -3,159 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workspace — Crest AI</title>
+  <title>Crest AI — Workspace</title>
   <link rel="stylesheet" href="chat.css">
-  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
-  <link rel="apple-touch-icon" href="/assets/images/favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <div class="chat-app-container">
+  <div id="workspaceAlertSystem" class="alert-banner" style="display: none;">
+    <span id="workspaceAlertText"></span>
+  </div>
 
-    <aside class="chat-sidebar" id="chatSidebar">
-      
+  <div class="app-layout">
+    
+    <aside id="chatSidebar" class="sidebar">
       <div class="sidebar-header">
-        <a href="/index.html" class="sidebar-logo-link">
-          <img src="/assets/images/crest.svg" alt="Crest AI Logo" class="sidebar-logo-img" id="sidebarLogo">
-        </a>
-        <button class="icon-btn close-sidebar-mobile" id="closeSidebarBtn" aria-label="Dismiss Navigation Panel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+        <h2 class="brand-title">Crest AI</h2>
+        <button id="closeSidebarBtn" class="mobile-close-btn">×</button>
       </div>
-
-      <div class="sidebar-action-wrapper">
-        <button class="doodle-btn-primary new-chat-btn" id="newChatBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon-vector"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>New Session</span>
-        </button>
-      </div>
-
-      <div class="sidebar-search-box">
-        <div class="search-input-inner">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="chatSearchInput" placeholder="Filter current sessions..." autocomplete="off">
+      
+      <button id="newChatBtn" class="new-chat-btn">+ New Chat</button>
+      
+      <div class="sidebar-menu-links">
+        <div class="profile-section">
+          <p class="user-label">Logged in as:</p>
+          <span id="userProfileEmailDisplayLabel" class="user-email">Loading...</span>
         </div>
-      </div>
-
-      <div class="sidebar-history-scroll" id="historyListContainer">
-        <div class="sidebar-loading-placeholder" id="historyPlaceholder">
-          <div class="inline-spinner"></div>
-          <span>Synchronizing thread configurations...</span>
-        </div>
-      </div>
-
-      <div class="sidebar-user-footer">
-        <div class="user-meta-block">
-          <div class="user-avatar-indicator" id="userAvatarChar">U</div>
-          <div class="user-details">
-            <p class="user-email-label" id="userEmailLabel">authenticating...</p>
-            <p class="user-plan-badge" id="userPlanLabel">Verifying Access Tier</p>
-          </div>
-        </div>
-        <button class="logout-icon-btn" id="sidebarLogoutBtn" title="De-authenticate Current Session" aria-label="Log Out">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        </button>
       </div>
     </aside>
 
-    <main class="chat-main-workspace">
+    <main class="chat-viewport">
       
-      <header class="workspace-header">
-        <div class="header-left-cluster">
-          <button class="icon-btn mobile-menu-toggle" id="mobileMenuToggleBtn" aria-label="Expose Hidden Context Menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          </button>
-          <div class="active-title-block">
-            <h2 class="active-chat-title" id="activeChatTitleText">System Genesis Window</h2>
-            <p class="active-model-status" id="pipelineStatusText">Infrastructure State: Standing By</p>
-          </div>
-        </div>
-
-        <div class="header-right-cluster">
-          <div class="quota-meter-pill" title="Daily localized ledger bandwidth validation mapping">
-            <span class="quota-label">Daily Pool:</span>
-            <span class="quota-count" id="quotaBalanceDisplay">--- / ---</span>
-          </div>
-        </div>
+      <header class="mobile-nav-bar">
+        <button id="mobileMenuToggleBtn" class="menu-burger-btn">☰</button>
+        <h1 class="mobile-brand-title">Crest AI</h1>
+        <span id="pipelineStatusText" class="status-indicator">Pipeline Idle</span>
       </header>
 
-      <div class="workspace-alert-banner" id="workspaceAlertSystem" style="display: none;">
-        <div class="alert-banner-inner">
-          <svg class="alert-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <p class="alert-banner-text" id="workspaceAlertText">System alert configuration initialization completed.</p>
-          <button class="close-alert-btn" id="closeAlertBtn" aria-label="Dismiss Banner Warning">&times;</button>
-        </div>
-      </div>
-
-      <div class="chat-messages-scrollarea" id="chatScrollContainer">
+      <div id="chatScrollContainer" class="chat-scroll-area">
         
-        <div class="chat-empty-welcome-screen" id="emptyWelcomeState">
-          <div class="welcome-card-inner">
-            <div class="welcome-icon-container">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="giant-welcome-svg"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l-7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+        <div id="emptyWelcomeState" class="welcome-splash">
+          <div class="welcome-hero-card">
+            <h1>Welcome to Crest AI</h1>
+            <p>Type a prompt below to start generating ideas, code, or answers instantly.</p>
+          </div>
+
+          <div class="suggestions-grid">
+            <div class="prompt-suggestion-card">
+              <div class="card-header-icon">
+                <svg viewBox="0 0 24 24" class="suggestion-svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+                <h3>Brainstorm ideas</h3>
+              </div>
+              <p>Give me 5 unique project ideas combining gaming and programming.</p>
             </div>
-            <h1 class="welcome-headline">Where should your mind venture next?</h1>
-            <p class="welcome-tagline">Initialize an isolated context block. Requests are automatically cross-routed through Google Gemini 2.0 Flash and Meta Llama deep nodes with multi-point safety validation pipelines.</p>
             
-            <div class="suggested-prompts-grid">
-              <button class="suggested-card" data-prompt="Analyze the trade-offs of using Client-side rendering vs Edge Workers for a global SaaS application.">
-                <h5>Technical Infrastructure</h5>
-                <p>Deconstruct performance optimization map vectors across globally isolated client platforms.</p>
-              </button>
-              <button class="suggested-card" data-prompt="Draft a clean, professional apology email regarding a service maintenance window delay, keeping tone completely transparent.">
-                <h5>Algorithmic Strategy</h5>
-                <p>Generate highly transparent, humanized corporate technical post-mortem communication maps.</p>
-              </button>
-              <button class="suggested-card" data-prompt="Write an optimized script using vanilla JS Streams API to parse chunked JSON payload buffers on the client container.">
-                <h5>Client-Side Performance</h5>
-                <p>Construct clear recursive text chunk reader maps parsing streaming payloads cleanly.</p>
-              </button>
-              <button class="suggested-card" data-prompt="Explain quantum telemetry state transformations in standard system layouts using straightforward analogies.">
-                <h5>Conceptual Engineering</h5>
-                <p>Translate deep computing models into highly structured, clear production documentation models.</p>
-              </button>
+            <div class="prompt-suggestion-card">
+              <div class="card-header-icon">
+                <svg viewBox="0 0 24 24" class="suggestion-svg"><path d="M20 19V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zM6 7h12v12H6V7zm3 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>
+                <h3>Debug code</h3>
+              </div>
+              <p>Find the error in this basic asynchronous JavaScript fetch request.</p>
             </div>
           </div>
         </div>
 
-        <div class="chat-conversation-thread" id="chatThreadContainer" style="display: none;"></div>
+        <div id="chatThreadContainer" class="message-thread-container"></div>
 
       </div>
 
-      <footer class="workspace-input-dock">
-        <form class="prompt-entry-form" id="promptSubmitForm" onsubmit="return false;">
-          <div class="input-card-outline">
+      <footer class="input-panel-anchor">
+        <form id="promptSubmitForm" class="input-form-wrapper">
+          <div class="textarea-container">
             <textarea 
               id="promptTextarea" 
+              placeholder="Ask Crest anything..." 
               rows="1" 
-              placeholder="Query Crest Engine Infrastructure... (Shift + Enter forces multi-line code arrays)"
               maxlength="4000"
-              required></textarea>
-            
-            <div class="input-controls-row">
-              <div class="input-meta-indicators">
-                <span class="character-counter" id="charCounter">0 / 4000</span>
-                <span class="context-memory-indicator" id="contextWindowLabel">Active Memory Buffer: 35 Node Context</span>
-              </div>
-              <button type="submit" class="doodle-submit-btn" id="promptSendBtn" aria-label="Dispatch Input Vector String" disabled>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="send-btn-vector"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-              </button>
+            ></textarea>
+            <div class="input-meta-utilities">
+              <span id="charCounter" class="character-metric-node">0 / 4000</span>
+              <span id="quotaBalanceDisplay" class="quota-metric-node">Quota: 100 / 100</span>
             </div>
           </div>
-          <p class="workspace-legal-fineprint">
-            Crest AI is an open-source multi-model synthesis container operating under Apache 2.0. Responses are generated metrics. Review cross-references. View <a href="/pages/legal/content-policy.html" target="_blank">Content Guidelines</a>.
-          </p>
+          <button type="submit" id="promptSendBtn" class="send-action-button" disabled>
+            <svg viewBox="0 0 24 24" class="send-icon"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
         </form>
       </footer>
-    </main>
 
+    </main>
   </div>
 
-  <script type="module" src="chat.js"></script>
+  <script src="chat.js"></script>
 </body>
 </html>
