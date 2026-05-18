@@ -1,101 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crest AI — Workspace</title>
-  <link rel="stylesheet" href="chat.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crest AI</title>
+  <link rel="stylesheet" href="chat.css" />
 </head>
 <body>
 
-  <div id="workspaceAlertSystem" class="alert-banner" style="display: none;">
-    <span id="workspaceAlertText"></span>
+  <!-- ============================================================
+       GLOBAL ALERT BANNER
+       Appears at the top of the screen for non-blocking notices.
+       Hidden by default; shown via JS by adding `.visible` class.
+  ============================================================ -->
+  <div id="workspaceAlertSystem" class="workspace-alert" role="alert" aria-live="polite">
+    <span id="workspaceAlertText" class="workspace-alert__text"></span>
+    <button class="workspace-alert__dismiss" id="alertDismissBtn" aria-label="Dismiss alert">
+      <!-- Inline SVG: close X icon -->
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
   </div>
 
-  <div class="app-layout">
-    
-    <aside id="chatSidebar" class="sidebar">
-      <div class="sidebar-header">
-        <h2 class="brand-title">Crest AI</h2>
-        <button id="closeSidebarBtn" class="mobile-close-btn">×</button>
+  <!-- ============================================================
+       USERNAME SETUP MODAL
+       Full-screen overlay shown to new Google OAuth users who have
+       not yet chosen a username. Locks out the workspace until
+       a valid, unique username is saved to the profiles table.
+  ============================================================ -->
+  <div id="usernameModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+    <div class="modal-card">
+
+      <!-- Modal brand mark -->
+      <div class="modal-card__brand">
+        <!-- Inline SVG: minimal diamond / crest mark -->
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="#f5f5f7" stroke-width="1.5" fill="none"/>
+          <path d="M16 8L24 16L16 24L8 16L16 8Z" fill="#f5f5f7" opacity="0.15"/>
+        </svg>
       </div>
-      
-      <button id="newChatBtn" class="new-chat-btn">
-        <svg viewBox="0 0 24 24" class="btn-svg"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        New Chat
+
+      <h1 id="modalHeading" class="modal-card__heading">One last step</h1>
+      <p class="modal-card__subtext">
+        Choose a username for your Crest account. This will appear across your workspace.
+      </p>
+
+      <!-- Username input -->
+      <div class="modal-input-wrapper">
+        <input
+          type="text"
+          id="modalUsernameInput"
+          class="modal-input"
+          placeholder="e.g. alex_chen"
+          maxlength="20"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Choose a username"
+          aria-describedby="modalErrorText"
+        />
+      </div>
+
+      <!-- Inline validation / error message zone -->
+      <p id="modalErrorText" class="modal-error" role="alert" aria-live="assertive"></p>
+
+      <!-- Confirm action -->
+      <button id="saveUsernameBtn" class="modal-confirm-btn" type="button">
+        Complete Setup
       </button>
-      
-      <div class="sidebar-menu-links">
-        <div class="profile-section">
-          <p class="user-label">Logged in as:</p>
-          <span id="userProfileEmailDisplayLabel" class="user-email">Loading...</span>
+
+      <!-- Requirement hint -->
+      <p class="modal-hint">3 – 20 characters &middot; letters, numbers, and underscores only</p>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       CORE APPLICATION LAYOUT
+       Split-pane: fixed 260px sidebar + fluid chat viewport.
+  ============================================================ -->
+  <div class="app-layout">
+
+    <!-- ==========================================================
+         LEFT NAVIGATION SIDEBAR
+    ========================================================== -->
+    <aside id="chatSidebar" class="sidebar" aria-label="Navigation sidebar">
+
+      <!-- Sidebar top: brand + close button (mobile) -->
+      <div class="sidebar__header">
+        <div class="sidebar__brand">
+          <!-- Inline SVG: small crest diamond mark -->
+          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="#f5f5f7" stroke-width="2" fill="none"/>
+            <path d="M16 8L24 16L16 24L8 16L16 8Z" fill="#f5f5f7" opacity="0.2"/>
+          </svg>
+          <span class="brand-title">Crest</span>
         </div>
+
+        <!-- Mobile: close sidebar -->
+        <button id="closeSidebarBtn" class="sidebar__close-btn" aria-label="Close sidebar" type="button">
+          <!-- Inline SVG: X icon -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2L14 14M14 2L2 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- New chat button -->
+      <div class="sidebar__actions">
+        <button id="newChatBtn" class="new-chat-btn" type="button" aria-label="Start a new conversation">
+          <!-- Inline SVG: plus icon -->
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M7 1V13M1 7H13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span>New conversation</span>
+        </button>
+      </div>
+
+      <!-- Conversation history list (populated by JS if needed) -->
+      <nav class="sidebar__history" aria-label="Conversation history">
+        <!-- Future: dynamically inserted conversation history items go here -->
+      </nav>
+
+      <!-- Bottom profile drawer -->
+      <div class="sidebar__profile" id="sidebarProfileDrawer">
+        <!-- Inline SVG: user avatar circle icon -->
+        <div class="profile__avatar" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="8" r="4" stroke="#86868b" stroke-width="1.5"/>
+            <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#86868b" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="profile__info">
+          <span id="userProfileEmailDisplayLabel" class="profile__name">Loading...</span>
+          <span class="profile__role">Account</span>
+        </div>
+        <!-- Sign out button -->
+        <button id="signOutBtn" class="profile__signout-btn" type="button" aria-label="Sign out">
+          <!-- Inline SVG: logout arrow icon -->
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 17l5-5-5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 12H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
     </aside>
 
-    <main class="chat-viewport">
-      
-      <header class="mobile-nav-bar">
-        <button id="mobileMenuToggleBtn" class="menu-burger-btn">☰</button>
-        <h1 class="mobile-brand-title">Crest AI</h1>
-        <span id="pipelineStatusText" class="status-indicator">Pipeline Node Steady</span>
-      </header>
+    <!-- ==========================================================
+         PRIMARY CHAT VIEWPORT
+    ========================================================== -->
+    <main class="chat-viewport" role="main">
 
-      <div id="chatScrollContainer" class="chat-scroll-area">
-        
-        <div id="emptyWelcomeState" class="welcome-splash">
-          <div class="welcome-hero-card">
-            <h1>Welcome to Crest AI</h1>
-            <p class="welcome-subtitle">Type a prompt below to start generating ideas, code, or answers instantly.</p>
-          </div>
+      <!-- Top navigation header bar -->
+      <header class="chat-topbar">
 
-          <div class="suggestions-grid">
-            <div class="prompt-suggestion-card">
-              <div class="card-header-icon">
-                <svg viewBox="0 0 24 24" class="suggestion-svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-                <h3>Brainstorm ideas</h3>
-              </div>
-              <p>Give me 5 unique project ideas combining gaming and programming.</p>
-            </div>
-            
-            <div class="prompt-suggestion-card">
-              <div class="card-header-icon">
-                <svg viewBox="0 0 24 24" class="suggestion-svg"><path d="M20 19V7c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zM6 7h12v12H6V7zm3 4h6v2H9v-2zm0 4h6v2H9v-2z"/></svg>
-                <h3>Debug code</h3>
-              </div>
-              <p>Find the error in this basic asynchronous JavaScript fetch request.</p>
-            </div>
+        <!-- Mobile: hamburger menu toggle -->
+        <button id="mobileMenuToggleBtn" class="topbar__menu-toggle" type="button" aria-label="Open sidebar" aria-expanded="false" aria-controls="chatSidebar">
+          <!-- Inline SVG: hamburger lines -->
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <!-- Center: model / status label -->
+        <div class="topbar__center">
+          <span class="topbar__model-label">Crest AI</span>
+          <div class="topbar__status-pill">
+            <!-- Inline SVG: animated status dot -->
+            <span class="status-dot" id="statusDotIndicator" aria-hidden="true"></span>
+            <span id="pipelineStatusText" class="topbar__status-text">Ready</span>
           </div>
         </div>
 
-        <div id="chatThreadContainer" class="message-thread-container"></div>
+        <!-- Right: spacer to balance the hamburger on mobile -->
+        <div class="topbar__right-spacer" aria-hidden="true"></div>
+
+      </header>
+
+      <!-- --------------------------------------------------------
+           SCROLLABLE CONVERSATION AREA
+      -------------------------------------------------------- -->
+      <div id="chatScrollContainer" class="chat-scroll-area" role="log" aria-label="Conversation" aria-live="polite">
+
+        <!-- Empty / welcome state — hidden once first message is sent -->
+        <div id="emptyWelcomeState" class="welcome-state">
+
+          <!-- Welcome crest mark -->
+          <div class="welcome-state__mark" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 2L30 16L16 30L2 16L16 2Z" stroke="#3a3a3a" stroke-width="1.5" fill="none"/>
+              <path d="M16 8L24 16L16 24L8 16L16 8Z" fill="#3a3a3a"/>
+            </svg>
+          </div>
+
+          <h2 class="welcome-state__heading">How can I help you?</h2>
+          <p class="welcome-state__subtext">Ask anything. Crest thinks carefully before it responds.</p>
+
+          <!-- Suggestion cards -->
+          <div class="suggestion-grid" role="list">
+
+            <button class="suggestion-card" type="button" role="listitem" data-suggestion="Explain the difference between machine learning and deep learning in plain English.">
+              <span class="suggestion-card__label">Explain a concept</span>
+              <span class="suggestion-card__body">Machine learning vs. deep learning</span>
+            </button>
+
+            <button class="suggestion-card" type="button" role="listitem" data-suggestion="Write a professional cold outreach email for a SaaS product targeting startup founders.">
+              <span class="suggestion-card__label">Draft something</span>
+              <span class="suggestion-card__body">Cold outreach email for a SaaS product</span>
+            </button>
+
+            <button class="suggestion-card" type="button" role="listitem" data-suggestion="Debug this JavaScript function and explain what was wrong line by line.">
+              <span class="suggestion-card__label">Debug code</span>
+              <span class="suggestion-card__body">Find the bug and explain the fix</span>
+            </button>
+
+            <button class="suggestion-card" type="button" role="listitem" data-suggestion="Summarise the key ideas from the book 'Thinking, Fast and Slow' by Daniel Kahneman.">
+              <span class="suggestion-card__label">Summarise a book</span>
+              <span class="suggestion-card__body">Thinking, Fast and Slow</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Live message thread — messages are appended here by JS -->
+        <div id="chatThreadContainer" class="chat-thread" aria-label="Chat messages"></div>
 
       </div>
+      <!-- /chatScrollContainer -->
 
-      <footer class="input-panel-anchor">
-        <form id="promptSubmitForm" class="input-form-wrapper">
-          <div class="textarea-container">
-            <textarea 
-              id="promptTextarea" 
-              placeholder="Ask Crest anything..." 
-              rows="1" 
+      <!-- --------------------------------------------------------
+           FIXED BOTTOM INPUT PANEL
+      -------------------------------------------------------- -->
+      <div class="input-panel-anchor">
+        <form id="promptSubmitForm" class="prompt-form" novalidate autocomplete="off">
+
+          <!-- Textarea wrapper with focus-ring border treatment -->
+          <div class="textarea-container" id="textareaShell">
+
+            <!-- Multi-line elastic textarea -->
+            <textarea
+              id="promptTextarea"
+              class="prompt-textarea"
+              placeholder="Message Crest..."
+              rows="1"
               maxlength="4000"
+              aria-label="Message input"
+              aria-multiline="true"
+              spellcheck="true"
             ></textarea>
-            <div class="input-meta-utilities">
-              <span id="charCounter" class="character-metric-node">0 / 4000</span>
-              <span id="quotaBalanceDisplay" class="quota-metric-node">Daily System Allocation Balance: 100 / 100 Free Nodes Transacted</span>
+
+            <!-- Bottom row: char counter + quota + send button -->
+            <div class="prompt-form__footer">
+              <span id="charCounter" class="char-counter" aria-live="polite" aria-atomic="true">0 / 4000</span>
+              <span id="quotaBalanceDisplay" class="quota-display" aria-live="polite" aria-atomic="true">100 remaining requests</span>
+
+              <!-- Send action button -->
+              <button
+                id="promptSendBtn"
+                class="send-action-button"
+                type="submit"
+                disabled
+                aria-label="Send message"
+                aria-disabled="true"
+              >
+                <!-- Inline SVG: upward arrow send icon -->
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
+
           </div>
-          <button type="submit" id="promptSendBtn" class="send-action-button" disabled>
-            <svg viewBox="0 0 24 24" class="send-icon"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-          </button>
+
         </form>
-      </footer>
+
+        <!-- Legal / policy footnote -->
+        <p class="input-panel__footnote">
+          Crest can make mistakes. Verify important information independently.
+        </p>
+      </div>
+      <!-- /input-panel-anchor -->
 
     </main>
-  </div>
+    <!-- /chat-viewport -->
 
+  </div>
+  <!-- /app-layout -->
+
+  <!-- Supabase CDN (UMD build — exposes window.supabase) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <!-- Application controller -->
   <script src="chat.js"></script>
+
 </body>
 </html>
