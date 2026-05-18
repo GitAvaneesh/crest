@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Crest AI</title>
+  <link rel="stylesheet" href="login.css">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <a href="/index.html" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    <span>Back to home</span>
+  </a>
+
+  <div class="auth-container">
+    <div class="auth-left">
+      <div class="auth-left-inner">
+        <img src="/assets/images/crest.svg" alt="Crest AI Logo" class="auth-logo" onerror="this.style.display='none'">
+        <h2>Intelligence.<br>Creativity.<br>Elevated.</h2>
+        <p>Your isolated production node for high-throughput synthesis, algorithmic design, and architectural clarity.</p>
+        <div class="auth-features">
+          <div class="auth-feature"><span class="feature-dot"></span><span>100 context instances free daily</span></div>
+          <div class="auth-feature"><span class="feature-dot"></span><span>Isolated multi-point safety filters</span></div>
+          <div class="auth-feature"><span class="feature-dot"></span><span>Gemini & Llama deep core pipelines</span></div>
+          <div class="auth-feature"><span class="feature-dot"></span><span>Zero validation metrics required</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card">
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="loginTab" type="button" onclick="window.switchTab('login')">Log in</button>
+          <button class="auth-tab" id="signupTab" type="button" onclick="window.switchTab('signup')">Sign up</button>
+        </div>
+
+        <div class="auth-message" id="authMessage"></div>
+
+        <div class="oauth-buttons">
+          <button type="button" class="oauth-btn" onclick="window.handleGoogle()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span>Continue with Google</span>
+          </button>
+        </div>
+
+        <div class="auth-divider"><span>or continue with email</span></div>
+
+        <form id="loginForm" onsubmit="window.handleLogin(event); return false;">
+          <div class="form-group">
+            <label for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">
+              <span>Password</span>
+              <a href="#" class="forgot-link" onclick="window.handleForgotPassword(); return false;">Forgot password?</a>
+            </label>
+            <div class="input-wrapper">
+              <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="toggle-password" onclick="window.togglePassword('loginPassword')" aria-label="Toggle password view">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="loginBtn">Authenticate Session</button>
+        </form>
+
+        <form id="signupForm" style="display:none" onsubmit="window.handleSignup(event); return false;">
+          <div class="form-group">
+            <label for="signupName">Full Name</label>
+            <input type="text" id="signupName" placeholder="Avaneesh Shahi" autocomplete="name" required>
+          </div>
+          <div class="form-group">
+            <label for="signupEmail">Email Address</label>
+            <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+          <div class="form-group">
+            <label for="signupPassword">Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="signupPassword" placeholder="Minimum 8 characters" autocomplete="new-password" required>
+              <button type="button" class="toggle-password" onclick="window.togglePassword('signupPassword')" aria-label="Toggle password view">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="signupConfirm">Confirm Password</label>
+            <div class="input-wrapper">
+              <input type="password" id="signupConfirm" placeholder="••••••••" autocomplete="new-password" required>
+              <button type="button" class="toggle-password" onclick="window.togglePassword('signupConfirm')" aria-label="Toggle password view">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="terms-note">
+            By initializing an account layer, you consent to our
+            <a href="/pages/legal/terms-of-service.html" target="_blank">Terms of Service</a>
+            and <a href="/pages/legal/privacy-policy.html" target="_blank">Privacy Policy</a>.
+          </p>
+          <button type="submit" class="btn-primary" id="signupBtn">Provision Account Node</button>
+        </form>
+
+        <p class="auth-switch" id="authSwitch">
+          Don't have an account? <a href="#" onclick="window.switchTab('signup'); return false;">Sign up free</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>

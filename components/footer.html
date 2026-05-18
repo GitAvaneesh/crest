@@ -1,0 +1,172 @@
+<!-- components/footer.html -->
+
+<style>
+  .crest-footer {
+    width: 100%;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    background: #fff;
+    padding: 3rem 2rem 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .crest-footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 3rem;
+  }
+
+  /* Brand column */
+  .crest-footer-brand img {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .crest-footer-brand p {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+    max-width: 220px;
+  }
+
+  /* Link columns */
+  .crest-footer-col h4 {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #111;
+    margin-bottom: 1rem;
+  }
+
+  .crest-footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .crest-footer-col ul a {
+    font-size: 13px;
+    color: #888;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .crest-footer-col ul a:hover {
+    color: #111;
+  }
+
+  /* Bottom bar */
+  .crest-footer-bottom {
+    max-width: 1100px;
+    margin: 2.5rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .crest-footer-bottom p {
+    font-size: 12px;
+    color: #bbb;
+  }
+
+  .crest-footer-bottom-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .crest-footer-bottom-links a {
+    font-size: 12px;
+    color: #bbb;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .crest-footer-bottom-links a:hover {
+    color: #111;
+  }
+
+  @media (max-width: 768px) {
+    .crest-footer-inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .crest-footer-brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .crest-footer-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .crest-footer-bottom {
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
+    }
+  }
+</style>
+
+<footer class="crest-footer">
+  <div class="crest-footer-inner">
+
+    <!-- Brand -->
+    <div class="crest-footer-brand">
+      <img src="/assets/images/crest-ai.png" alt="Crest AI" onerror="this.style.display='none'">
+      <p>Intelligence. Creativity. Elevated. Your AI partner for smarter thinking and better results.</p>
+    </div>
+
+    <!-- Product -->
+    <div class="crest-footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/index.html#features">Features</a></li>
+        <li><a href="/index.html#pricing">Pricing</a></li>
+        <li><a href="/chat.html">Start chatting</a></li>
+      </ul>
+    </div>
+
+    <!-- Company -->
+    <div class="crest-footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="/index.html#about">About</a></li>
+        <li><a href="/pages/legal/content-policy.html">Content policy</a></li>
+      </ul>
+    </div>
+
+    <!-- Legal -->
+    <div class="crest-footer-col">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/pages/legal/privacy-policy.html">Privacy policy</a></li>
+        <li><a href="/pages/legal/terms-of-service.html">Terms of service</a></li>
+        <li><a href="/pages/legal/content-policy.html">Content policy</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="crest-footer-bottom">
+    <p>&copy; 2026 Crest AI by Avaneesh Shahi. All rights reserved.</p>
+    <div class="crest-footer-bottom-links">
+      <a href="/pages/legal/privacy-policy.html">Privacy</a>
+      <a href="/pages/legal/terms-of-service.html">Terms</a>
+      <a href="/pages/legal/content-policy.html">Content policy</a>
+    </div>
+  </div>
+
+</footer>

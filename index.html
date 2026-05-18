@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crest AI — Intelligence. Creativity. Elevated.</title>
+  <meta name="description" content="Crest is your AI partner for smarter thinking, better writing, and extraordinary results. Powered by multi-model intelligence with built-in safety.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ══ NAVBAR ══════════════════════════════════════════════ -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="assets/images/crest.svg" alt="Crest AI">
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How it works</a></li>
+        <li><a href="#comparison">Comparison</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="pages/auth/login.html" class="btn-ghost">Log in</a>
+        <a href="pages/auth/login.html?mode=signup" class="btn-dark">Get started free</a>
+      </div>
+      <button class="nav-burger" id="navBurger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+      <a href="#features" onclick="closeMobile()">Features</a>
+      <a href="#how-it-works" onclick="closeMobile()">How it works</a>
+      <a href="#comparison" onclick="closeMobile()">Comparison</a>
+      <a href="#pricing" onclick="closeMobile()">Pricing</a>
+      <a href="#about" onclick="closeMobile()">About</a>
+      <div class="mobile-sep"></div>
+      <a href="pages/auth/login.html" class="mobile-ghost">Log in</a>
+      <a href="pages/auth/login.html?mode=signup" class="mobile-dark">Get started free</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ════════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-lines">
+      <div class="h-line"></div><div class="h-line"></div>
+      <div class="h-line"></div><div class="h-line"></div>
+    </div>
+    <div class="container">
+      <div class="hero-left fade-up">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          Multi-model AI &nbsp;·&nbsp; Built-in safety &nbsp;·&nbsp; Always on
+        </div>
+        <h1 class="hero-title">
+          Intelligence.<br>Creativity.<br><em>Elevated.</em>
+        </h1>
+        <p class="hero-desc">
+          Crest is your AI partner for smarter thinking, better writing, and extraordinary results — powered by multiple leading AI models with advanced safety checks built in at every step.
+        </p>
+        <div class="hero-actions">
+          <a href="pages/auth/login.html?mode=signup" class="btn-dark btn-lg">
+            Start for free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#how-it-works" class="btn-outline btn-lg">See how it works</a>
+        </div>
+        <div class="hero-trust">
+          <span>Free forever plan</span>
+          <span class="dot">·</span>
+          <span>No credit card</span>
+          <span class="dot">·</span>
+          <span>100 messages/day</span>
+        </div>
+      </div>
+      <div class="hero-right fade-up delay-2">
+        <div class="hero-img-card">
+          <img src="assets/images/banner.png" alt="Crest AI Banner">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MODELS BAR ══════════════════════════════════════════ -->
+  <section class="models-bar">
+    <div class="container">
+      <p class="models-label fade-up">Powered by the world's leading AI models</p>
+      <div class="models-row fade-up delay-1">
+
+        <div class="model-pill">
+          <div class="model-logo google">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          </div>
+          <div>
+            <div class="model-name">Gemini 2.0 Flash</div>
+            <div class="model-role">Primary model</div>
+          </div>
+        </div>
+
+        <div class="model-sep"></div>
+
+        <div class="model-pill">
+          <div class="model-logo meta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+          </div>
+          <div>
+            <div class="model-name">Llama 4 Scout</div>
+            <div class="model-role">First fallback · via Groq</div>
+          </div>
+        </div>
+
+        <div class="model-sep"></div>
+
+        <div class="model-pill">
+          <div class="model-logo meta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+          </div>
+          <div>
+            <div class="model-name">Llama 3.3 70B</div>
+            <div class="model-role">Second fallback · via Groq</div>
+          </div>
+        </div>
+
+        <div class="model-sep"></div>
+
+        <div class="model-pill">
+          <div class="model-logo safety">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div class="model-name">Safety GPT OSS 20B</div>
+            <div class="model-role">Safety layer · every request</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ STATS ════════════════════════════════════════════════ -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card fade-up">
+          <div class="stat-num">4+</div>
+          <div class="stat-name">AI models working together</div>
+          <p>Gemini, Llama 4 Scout, Llama 3.3 70B and Safety GPT combine to give you the most accurate, safe answers possible — every single time.</p>
+        </div>
+        <div class="stat-card fade-up delay-1">
+          <div class="stat-num">100</div>
+          <div class="stat-name">Free messages every day</div>
+          <p>No trial limits, no paywalls on day one. Get 100 full-quality AI messages every day completely free — forever on the free plan.</p>
+        </div>
+        <div class="stat-card fade-up delay-2">
+          <div class="stat-num">35</div>
+          <div class="stat-name">Messages of context memory</div>
+          <p>Crest remembers the last 35 messages in your conversation so you can have deep, meaningful discussions without repeating yourself.</p>
+        </div>
+        <div class="stat-card fade-up delay-3">
+          <div class="stat-num">0ms</div>
+          <div class="stat-name">Downtime with failover</div>
+          <p>If one model hits a rate limit, Crest instantly switches to the next. You never get stuck or see an error mid-conversation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ════════════════════════════════════════════ -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-label fade-up">Features</div>
+      <h2 class="section-title fade-up delay-1">Everything you need.<br>Nothing you don't.</h2>
+      <p class="section-desc fade-up delay-2">Crest is built to be fast, safe, and reliable. Every feature exists to help you think better, write better, and work smarter.</p>
+
+      <div class="bento">
+
+        <div class="bento-card bento-2col fade-up">
+          <div class="bento-text">
+            <div class="bento-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3>Built-in safety at every step</h3>
+            <p>Before Crest ever responds, Safety GPT OSS 20B reviews your message in milliseconds. Illegal content, harmful requests, sexual content, and policy violations are blocked automatically — keeping every conversation safe for everyone aged 13 and above.</p>
+            <div class="bento-chips">
+              <span>Content moderation</span><span>Auto-blocking</span><span>Policy enforcement</span>
+            </div>
+          </div>
+          <div class="bento-img">
+            <img src="assets/images/icon-pack.png" alt="Safety features">
+          </div>
+        </div>
+
+        <div class="bento-card fade-up delay-1">
+          <div class="bento-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          </div>
+          <h3>Multi-model intelligence</h3>
+          <p>Crest combines Gemini 2.0 Flash, Llama 4 Scout, and Llama 3.3 70B — automatically routing to the best available model so you always get the smartest, most accurate answer possible.</p>
+          <div class="bento-chips">
+            <span>Gemini 2.0</span><span>Llama 4 Scout</span><span>Llama 3.3 70B</span>
+          </div>
+        </div>
+
+        <div class="bento-card fade-up delay-2">
+          <div class="bento-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3>Intelligent failover</h3>
+          <p>When Gemini hits its rate limit, Crest automatically switches to Llama 4 Scout. If that's busy, Llama 3.3 70B steps in. 4 Gemini keys rotate before falling back. You never wait, never see an error.</p>
+          <div class="bento-chips">
+            <span>Zero downtime</span><span>4 Gemini keys</span><span>Auto-switching</span>
+          </div>
+        </div>
+
+        <div class="bento-card bento-dark bento-2col fade-up delay-1">
+          <div class="bento-text">
+            <div class="bento-icon bento-icon-inv">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h3>35-message context window</h3>
+            <p>Crest remembers the last 35 messages in your conversation — enough context for deep, meaningful discussions. Ask follow-up questions, reference earlier points, and have real conversations without constantly repeating yourself.</p>
+            <div class="bento-chips bento-chips-inv">
+              <span>Deep context</span><span>Follow-ups</span><span>Natural flow</span>
+            </div>
+          </div>
+          <div class="bento-img">
+            <img src="assets/images/multi-model.png" alt="Multi model flow">
+          </div>
+        </div>
+
+        <div class="bento-card fade-up">
+          <div class="bento-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+          <h3>Warning & ban system</h3>
+          <p>Crest takes policy seriously. Users who violate content policies receive warnings. After 5 warnings a temporary ban is issued. Continued violations result in a permanent ban — keeping the community safe.</p>
+          <div class="bento-chips">
+            <span>5 warnings</span><span>Temp ban</span><span>Permanent ban</span>
+          </div>
+        </div>
+
+        <div class="bento-card fade-up delay-1">
+          <div class="bento-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <h3>Clean minimal interface</h3>
+          <p>No clutter, no noise. A refined black and white design that keeps your focus entirely on the conversation. Every pixel has a purpose — nothing added without a reason.</p>
+          <div class="bento-chips">
+            <span>Minimal design</span><span>Distraction-free</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HOW IT WORKS ════════════════════════════════════════ -->
+  <section class="hiw" id="how-it-works">
+    <div class="container">
+      <div class="section-label fade-up">How it works</div>
+      <h2 class="section-title fade-up delay-1">Every message. A carefully<br>engineered pipeline.</h2>
+      <p class="section-desc fade-up delay-2">Crest doesn't just forward your message to an AI. It runs every request through a multi-stage system designed for the safest, most reliable response every time.</p>
+
+      <div class="hiw-img fade-up delay-3">
+        <img src="assets/images/multi-model.png" alt="How Crest works">
+      </div>
+
+      <div class="steps">
+        <div class="step fade-up">
+          <div class="step-num">01</div>
+          <div class="step-body">
+            <h3>You send a message</h3>
+            <p>Type anything — a question, an idea, a task, a problem. Crest accepts any text input and immediately begins processing your request through the pipeline.</p>
+          </div>
+        </div>
+        <div class="step fade-up delay-1">
+          <div class="step-num">02</div>
+          <div class="step-body">
+            <h3>Safety GPT checks it</h3>
+            <p>Before anything else happens, Safety GPT OSS 20B via Groq reviews your message in milliseconds. Harmful, illegal, or policy-violating content is blocked immediately with a clear explanation.</p>
+          </div>
+        </div>
+        <div class="step fade-up delay-2">
+          <div class="step-num">03</div>
+          <div class="step-body">
+            <h3>Gemini 2.0 Flash responds</h3>
+            <p>Your message — along with up to 35 messages of conversation history — is sent to Gemini 2.0 Flash with Crest's system prompt. Gemini generates a helpful, accurate, and concise response.</p>
+          </div>
+        </div>
+        <div class="step fade-up delay-3">
+          <div class="step-num">04</div>
+          <div class="step-body">
+            <h3>Failover if needed</h3>
+            <p>If Gemini is rate limited, Crest retries with up to 4 rotating Gemini API keys. If all are exhausted, Llama 4 Scout on Groq takes over. If that fails too, Llama 3.3 70B steps in as the final fallback.</p>
+          </div>
+        </div>
+        <div class="step fade-up delay-4">
+          <div class="step-num">05</div>
+          <div class="step-body">
+            <h3>Your answer arrives</h3>
+            <p>A clean, accurate response appears in your chat. Usage is tracked so your daily limits are respected. The whole process takes milliseconds — you'll barely notice it happened.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ COMPARISON ══════════════════════════════════════════ -->
+  <section class="comparison" id="comparison">
+    <div class="container">
+      <div class="section-label fade-up">Comparison</div>
+      <h2 class="section-title fade-up delay-1">Multiple minds.<br>One accurate answer.</h2>
+      <p class="section-desc fade-up delay-2">Single-model AI tools break when they hit rate limits, make mistakes with no cross-checking, and have no safety layer. Crest is built differently.</p>
+
+      <div class="comp-img fade-up delay-3">
+        <img src="assets/images/comparision.png" alt="Crest vs Others">
+      </div>
+
+      <div class="comp-table fade-up delay-4">
+        <div class="comp-head">
+          <div></div>
+          <div class="comp-crest"><span class="crest-badge">Crest AI</span><small>Multi-model</small></div>
+          <div class="comp-others"><span>Others</span><small>Single-model</small></div>
+        </div>
+        <div class="comp-row"><div class="comp-feat">Multiple AI models working together</div><div class="yes">✓</div><div class="no">✗</div></div>
+        <div class="comp-row"><div class="comp-feat">Built-in safety layer before every response</div><div class="yes">✓</div><div class="no">✗</div></div>
+        <div class="comp-row"><div class="comp-feat">Intelligent failover — never get stuck</div><div class="yes">✓</div><div class="no">✗</div></div>
+        <div class="comp-row"><div class="comp-feat">Cross-verified accuracy across models</div><div class="yes">✓</div><div class="no">✗</div></div>
+        <div class="comp-row"><div class="comp-feat">35-message conversation context</div><div class="yes">✓</div><div class="no">Limited</div></div>
+        <div class="comp-row"><div class="comp-feat">Free daily usage — no trial period</div><div class="yes">100 msgs</div><div class="no">Limited</div></div>
+        <div class="comp-row"><div class="comp-feat">Rate limit problems</div><div class="yes">Never</div><div class="no">Common</div></div>
+        <div class="comp-row"><div class="comp-feat">Warning & ban policy enforcement</div><div class="yes">✓</div><div class="no">✗</div></div>
+        <div class="comp-row"><div class="comp-feat">Open source — Apache 2.0</div><div class="yes">✓</div><div class="no">✗</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PRICING ═════════════════════════════════════════════ -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-label fade-up">Pricing</div>
+      <h2 class="section-title fade-up delay-1">Simple, transparent pricing.<br>No surprises.</h2>
+      <p class="section-desc fade-up delay-2">Start completely free. No credit card, no trial period, no hidden limits. Upgrade when you need more power.</p>
+
+      <div class="plans">
+
+        <div class="plan-card fade-up">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">₹0<span>/mo</span></div>
+          <p class="plan-desc">Everything you need to get started with AI. No card required.</p>
+          <ul class="plan-feats">
+            <li><span>✓</span> 100 messages per day</li>
+            <li><span>✓</span> 3 active chats</li>
+            <li><span>✓</span> Multi-model AI (Gemini + Llama)</li>
+            <li><span>✓</span> Built-in safety checks</li>
+            <li><span>✓</span> 35-message context window</li>
+            <li><span>✓</span> Google login</li>
+            <li><span>✓</span> Email + password login</li>
+          </ul>
+          <a href="pages/auth/login.html?mode=signup" class="plan-btn plan-btn-outline">Get started free</a>
+        </div>
+
+        <div class="plan-card plan-featured fade-up delay-1">
+          <div class="plan-soon">Most popular · Coming soon</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">₹799<span>/mo</span></div>
+          <p class="plan-desc">For power users who need more capacity every day.</p>
+          <ul class="plan-feats">
+            <li><span>✓</span> 1,000 messages per day</li>
+            <li><span>✓</span> 20 active chats</li>
+            <li><span>✓</span> Priority model access</li>
+            <li><span>✓</span> Everything in Free</li>
+            <li><span>✓</span> Early access to new features</li>
+            <li><span>✓</span> Priority support</li>
+          </ul>
+          <a href="#" class="plan-btn plan-btn-white" onclick="notifyMe('Pro')">Notify me when live</a>
+        </div>
+
+        <div class="plan-card fade-up delay-2">
+          <div class="plan-soon">Coming soon</div>
+          <div class="plan-name">Plus</div>
+          <div class="plan-price">₹1,599<span>/mo</span></div>
+          <p class="plan-desc">For heavy users and teams who demand the absolute best.</p>
+          <ul class="plan-feats">
+            <li><span>✓</span> 5,000 messages per day</li>
+            <li><span>✓</span> 100 active chats</li>
+            <li><span>✓</span> All models unlocked</li>
+            <li><span>✓</span> Everything in Pro</li>
+            <li><span>✓</span> Dedicated priority support</li>
+            <li><span>✓</span> Usage analytics dashboard</li>
+          </ul>
+          <a href="#" class="plan-btn plan-btn-outline" onclick="notifyMe('Plus')">Notify me when live</a>
+        </div>
+
+      </div>
+      <p class="pricing-note fade-up delay-3">All plans include multi-model AI, built-in safety, and intelligent failover. Pro and Plus plans coming soon.</p>
+    </div>
+  </section>
+
+  <!-- ══ ABOUT ════════════════════════════════════════════════ -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-left fade-up">
+          <div class="section-label">About Crest</div>
+          <h2 class="section-title">Built with purpose.<br>Powered by passion.</h2>
+          <p>Crest was built by <strong>Avaneesh Shahi</strong> with one goal — to make powerful, multi-model AI accessible, safe, and reliable for everyone. Not just for enterprises or developers, but for students, creators, and curious minds everywhere.</p>
+          <p>We believe AI should work <em>for</em> you, not against you. That's why Crest uses multiple models, built-in safety checks, and intelligent fallbacks — so you always get the best answer, every time, without worrying about rate limits or harmful content.</p>
+          <p>Crest is proudly open source under the <strong>Apache 2.0 license</strong> and built on the shoulders of giants — Google Gemini, Meta Llama, and Groq.</p>
+          <div class="about-tags">
+            <div class="about-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Apache 2.0 Licensed
+            </div>
+            <div class="about-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              For ages 13+
+            </div>
+            <div class="about-tag">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              By Avaneesh Shahi
+            </div>
+          </div>
+          <a href="pages/auth/login.html?mode=signup" class="btn-dark" style="margin-top:2rem;display:inline-flex;align-items:center;gap:0.5rem;">
+            Try Crest for free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <div class="about-right fade-up delay-2">
+          <img src="assets/images/banner.png" alt="Crest AI">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══════════════════════════════════════════════════ -->
+  <section class="cta-sec">
+    <div class="container">
+      <div class="cta-box fade-up">
+        <img src="assets/images/crest.svg" alt="Crest AI" class="cta-logo">
+        <h2>Ready to think smarter?</h2>
+        <p>Join Crest today. 100 free messages every day. No credit card. No catch.</p>
+        <a href="pages/auth/login.html?mode=signup" class="btn-white btn-lg">
+          Get started for free
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <p class="cta-sub">Free forever · No credit card · Cancel anytime</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="assets/images/crest.svg" alt="Crest AI">
+          <p>Intelligence. Creativity. Elevated.<br>Your AI partner for extraordinary results.</p>
+          <span class="footer-lic">Apache 2.0 Licensed</span>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How it works</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="pages/chat-view/chat.html">Start chatting</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#comparison">Comparison</a></li>
+            <li><a href="pages/legal/content-policy.html">Content policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="pages/legal/privacy-policy.html">Privacy policy</a></li>
+            <li><a href="pages/legal/terms-of-service.html">Terms of service</a></li>
+            <li><a href="pages/legal/content-policy.html">Content policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Crest AI by Avaneesh Shahi. All rights reserved. Licensed under Apache 2.0.</p>
+        <div class="footer-links">
+          <a href="pages/legal/privacy-policy.html">Privacy</a>
+          <a href="pages/legal/terms-of-service.html">Terms</a>
+          <a href="pages/legal/content-policy.html">Content</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="scirpt.js"></script>
+</body>
+</html> 

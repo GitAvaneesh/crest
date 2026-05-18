@@ -1,0 +1,280 @@
+/* pages/pricing/pricing.css — Crest AI */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #ffffff;
+  color: #0f0f0f;
+  line-height: 1.6;
+}
+
+/* ── PRICING HERO SECTION ───────────────────────────────────── */
+.pricing-main-viewport {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 2rem 6rem 2rem;
+}
+
+.pricing-hero {
+  text-align: center;
+  max-width: 700px;
+  margin: 1rem auto 3.5rem auto;
+}
+
+.logo-wrapper {
+  margin-bottom: 1.25rem;
+}
+
+.main-doodle-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.pricing-title {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+
+.pricing-subtitle {
+  font-size: 1rem;
+  color: #555555;
+  line-height: 1.5;
+}
+
+/* ── STATUS NOTIFICATION BAR ────────────────────────────────── */
+.pricing-notification {
+  max-width: 520px;
+  margin: -1.5rem auto 3rem auto;
+  background-color: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  padding: 0.75rem 1.25rem;
+}
+
+.alert-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.alert-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* ── PRICING MATRIX GRID ────────────────────────────────────── */
+.pricing-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+  align-items: stretch;
+}
+
+.pricing-card {
+  background-color: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  padding: 2.25rem 1.75rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.pricing-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0px #000000;
+}
+
+/* Highlight Featured Pro Card */
+.pricing-card.popular {
+  background-color: #fafafa;
+  transform: scale(1.01);
+  box-shadow: 8px 8px 0px #000000;
+}
+
+.pricing-card.popular:hover {
+  transform: scale(1.01) translate(-2px, -2px);
+  box-shadow: 10px 10px 0px #000000;
+}
+
+/* Doodle Status Badges */
+.card-status-badge {
+  position: absolute;
+  top: -14px;
+  right: 20px;
+  background-color: #000000;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border: 2px solid #000000;
+}
+
+.card-status-badge.coming-soon-badge {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+
+/* Card Typography Header Elements */
+.tier-name {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 2.25rem;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+}
+
+.tier-desc {
+  font-size: 0.85rem;
+  color: #666666;
+  min-height: 3rem;
+  line-height: 1.4;
+  margin-bottom: 1.25rem;
+}
+
+.tier-price-block {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 1.5rem;
+}
+
+.price-currency {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-right: 0.15rem;
+}
+
+.price-value {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 3.5rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.price-cycle {
+  font-size: 0.9rem;
+  color: #888888;
+  margin-left: 0.25rem;
+}
+
+/* Action Control Buttons */
+.card-action-block {
+  margin-bottom: 2rem;
+}
+
+.doodle-cta-btn {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 3px solid #000000;
+  background-color: #ffffff;
+  color: #000000;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px #000000;
+  transition: all 0.1s ease;
+}
+
+.doodle-cta-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.doodle-cta-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.doodle-cta-btn.current-btn:disabled {
+  background-color: #000000;
+  color: #ffffff;
+  box-shadow: none;
+  cursor: default;
+}
+
+.doodle-cta-btn.coming-soon-btn {
+  background-color: #ffffff;
+  color: #555555;
+  border-style: dashed;
+}
+
+.doodle-cta-btn.coming-soon-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+  border-style: solid;
+}
+
+/* Features List Structural Setup */
+.card-features-list {
+  border-top: 2px dashed #e5e5e5;
+  padding-top: 1.5rem;
+  flex-grow: 1;
+}
+
+.features-ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.features-ul li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  color: #222222;
+}
+
+.check-icon {
+  width: 16px;
+  height: 16px;
+  color: #000000;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.pricing-footer-disclaimer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666666;
+  margin-top: 3.5rem;
+}
+
+/* ── RESPONSIVE COMPONENT LAYOUT MEDIA QUERY BREAKS ─────────── */
+@media (max-width: 900px) {
+  .pricing-deck-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .pricing-card.popular {
+    transform: none;
+  }
+  .pricing-card.popular:hover {
+    transform: translate(-2px, -2px);
+  }
+  .pricing-title {
+    font-size: 3rem;
+  }
+}
