@@ -1,173 +1,228 @@
-// =========================================================================
-// CREST AI — COMPREHENSIVE AUTHENTICATION INTERACTIVE LOGIC PIPELINE
-// =========================================================================
+// pages/auth/login.js — Crest AI
+// Completely self-contained script — Zero external file imports required!
 
-import { loginWithGoogle as googleLogin, loginWithEmail, signUpWithEmail, redirectIfLoggedIn } from '/lib/auth.js';
-import supabase from '/lib/supabase.js';
+// ── DIRECT CONFIGURATION MATRIX ──
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
-// Enforce proactive redirection if active tokens exist in client memory buffer
-redirectIfLoggedIn();
+// Safe initialize check to prevent browser engine panics
+let supabase;
+if (window.supabase && window.supabase.createClient) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  console.error("Supabase CDN script was missing from HTML headers.");
+}
 
-// ── GLOBAL APPLICATION UTILITY ATTACHMENTS (Exposing to Global Scope) ──
-
-window.showMessage = function(messageTextString, visibilityThemeType) {
-  const outputDisplayNode = document.getElementById('authMessage');
-  if (!outputDisplayNode) return;
-  outputDisplayNode.textContent = messageTextString;
-  outputDisplayNode.className = `auth-message ${visibilityThemeType}`;
-};
-
-window.clearMessage = function() {
-  const outputDisplayNode = document.getElementById('authMessage');
-  if (!outputDisplayNode) return;
-  outputDisplayNode.textContent = '';
-  outputDisplayNode.className = 'auth-message';
-};
-
-window.togglePassword = function(targetInputIdElement) {
-  const inputDomNode = document.getElementById(targetInputIdElement);
-  if (!inputDomNode) return;
-  inputDomNode.type = inputDomNode.type === 'password' ? 'text' : 'password';
-};
-
-window.switchTab = function(tabTargetMode) {
-  const loginFormNode   = document.getElementById('loginForm');
-  const signupFormNode  = document.getElementById('signupForm');
-  const loginTabBtn     = document.getElementById('loginTab');
-  const signupTabBtn    = document.getElementById('signupTab');
-  const authSwitchLabel = document.getElementById('authSwitch');
-
-  window.clearMessage();
-
-  if (tabTargetMode === 'login') {
-    if (loginFormNode) loginFormNode.style.display   = 'block';
-    if (signupFormNode) signupFormNode.style.display  = 'none';
-    if (loginTabBtn) loginTabBtn.classList.add('active');
-    if (signupTabBtn) signupTabBtn.classList.remove('active');
-    if (authSwitchLabel) {
-      authSwitchLabel.innerHTML = `Don't have an account? <a href="#" onclick="window.switchTab('signup'); return false;">Sign up free</a>`;
+// Proactive redirect if a session token is active in memory
+if (supabase) {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      window.location.href = '/pages/chat-view/chat.html';
     }
-  } else {
-    if (loginFormNode) loginFormNode.style.display   = 'none';
-    if (signupFormNode) signupFormNode.style.display  = 'block';
-    if (loginTabBtn) loginTabBtn.classList.remove('active');
-    if (signupTabBtn) signupTabBtn.classList.add('active');
-    if (authSwitchLabel) {
-      authSwitchLabel.innerHTML = `Already have an account? <a href="#" onclick="window.switchTab('login'); return false;">Log in</a>`;
-    }
-  }
-};
+  });
+}
 
-// ── FIXED GOOGLE OAUTH INTERCEPTOR VIA WINDOW SCOPE ──
-window.handleGoogle = async function() {
-  try {
-    window.clearMessage();
-    await googleLogin();
-  } catch (handshakeError) {
-    console.error("OAuth handshake loop error caught:", handshakeError);
-    window.showMessage(handshakeError.message || 'Google authentication failed. Please try again.', 'error');
-  }
-};
-
-// ── EMAIL AUTHENTICATION RUNTIME LIFECYCLES ──
-window.handleLogin = async function(executionEvent) {
-  if (executionEvent) executionEvent.preventDefault();
-
-  const emailPayloadString    = document.getElementById('loginEmail').value.trim();
-  const passwordPayloadString = document.getElementById('loginPassword').value;
-  const loginSubmissionBtn    = document.getElementById('loginBtn');
-
-  window.clearMessage();
-
-  if (!emailPayloadString || !passwordPayloadString) {
-    window.showMessage('Required authentication credentials are missing.', 'error');
-    return;
-  }
-
-  loginSubmissionBtn.disabled    = true;
-  loginSubmissionBtn.textContent = 'Verifying Identity...';
-
-  try {
-    await loginWithEmail(emailPayloadString, passwordPayloadString);
-    window.location.href = '/pages/chat-view/chat.html';
-  } catch (authHandshakeFault) {
-    console.error("Auth verification error:", authHandshakeFault);
-    window.showMessage(authHandshakeFault.message || 'Identity assertion failed. Check credentials.', 'error');
-    loginSubmissionBtn.disabled    = false;
-    loginSubmissionBtn.textContent = 'Authenticate Session';
-  }
-};
-
-window.handleSignup = async function(executionEvent) {
-  if (executionEvent) executionEvent.preventDefault();
-
-  const inputNameString      = document.getElementById('signupName').value.trim();
-  const inputEmailString     = document.getElementById('signupEmail').value.trim();
-  const inputPasswordString  = document.getElementById('signupPassword').value;
-  const inputConfirmString   = document.getElementById('signupConfirm').value;
-  const signupSubmissionBtn  = document.getElementById('signupBtn');
-
-  window.clearMessage();
-
-  if (!inputNameString || !inputEmailString || !inputPasswordString || !inputConfirmString) {
-    window.showMessage('All registration fields are mandatory.', 'error');
-    return;
-  }
-
-  if (inputPasswordString.length < 8) {
-    window.showMessage('Password must contain at least 8 characters.', 'error');
-    return;
-  }
-
-  if (inputPasswordString !== inputConfirmString) {
-    window.showMessage('Passwords do not match.', 'error');
-    return;
-  }
-
-  signupSubmissionBtn.disabled    = true;
-  signupSubmissionBtn.textContent = 'Provisioning Account...';
-
-  try {
-    await signUpWithEmail(inputEmailString, inputPasswordString, inputNameString);
-    window.showMessage('Account created successfully! Please check your email verification link.', 'success');
-    signupSubmissionBtn.disabled    = false;
-    signupSubmissionBtn.textContent = 'Provision Account Node';
-  } catch (registryFault) {
-    console.error("Downstream registration database block error:", registryFault);
-    window.showMessage(registryFault.message || 'Account provisioning failed.', 'error');
-    signupSubmissionBtn.disabled    = false;
-    signupSubmissionBtn.textContent = 'Provision Account Node';
-  }
-};
-
-window.handleForgotPassword = async function() {
-  const targetRecoveryEmail = document.getElementById('loginEmail').value.trim();
-
-  window.clearMessage();
-
-  if (!targetRecoveryEmail) {
-    window.showMessage('Please type your email address into the input field above first.', 'error');
-    return;
-  }
-
-  try {
-    const { error } = await supabase.auth.resetPasswordForEmail(targetRecoveryEmail, {
-      redirectTo: `${window.location.origin}/pages/auth/reset-password.html`
-    });
-    if (error) throw error;
-    window.showMessage('Recovery password link sent! Check your inbox folder.', 'success');
-  } catch (resetExecutionFault) {
-    console.error("Reset transmission error:", resetExecutionFault);
-    window.showMessage('Failed to deliver password recovery token across network.', 'error');
-  }
-};
-
-// Check for deep links or setup on initial load
-const urlParams = new URLSearchParams(window.location.search);
+// Parse initial URL parameters
+const urlParams = new URLSearchParams(window.location.search)
 if (urlParams.get('mode') === 'signup') {
-  window.switchTab('signup');
+  setTimeout(() => { switchTab('signup'); }, 50);
 }
-const urlError = urlParams.get('error');
-if (urlError) {
-  window.showMessage(decodeURIComponent(urlError), 'error');
+const urlError = urlParams.get('error')
+if (urlError) showMessage(decodeURIComponent(urlError), 'error')
+
+// ── Tab Switching Mechanics ──────────────────────────────────
+function switchTab(tab) {
+  const loginForm   = document.getElementById('loginForm')
+  const signupForm  = document.getElementById('signupForm')
+  const loginTab    = document.getElementById('loginTab')
+  const signupTab   = document.getElementById('signupTab')
+  const authSwitch  = document.getElementById('authSwitch')
+
+  clearMessage()
+
+  if (tab === 'login') {
+    if (loginForm) loginForm.style.display  = 'block'
+    if (signupForm) signupForm.style.display = 'none'
+    if (loginTab) loginTab.classList.add('active')
+    if (signupTab) signupTab.classList.remove('active')
+    if (authSwitch) authSwitch.innerHTML = `Don't have an account? <a href="#" onclick="window.switchTab('signup'); return false;">Sign up free</a>`
+  } else {
+    if (loginForm) loginForm.style.display  = 'none'
+    if (signupForm) signupForm.style.display = 'block'
+    if (loginTab) loginTab.classList.remove('active')
+    if (signupTab) signupTab.classList.add('active')
+    if (authSwitch) authSwitch.innerHTML = `Already have an account? <a href="#" onclick="window.switchTab('login'); return false;">Log in</a>`
+  }
 }
+
+// ── Interface Utilities ───────────────────────────────────────
+function togglePassword(id) {
+  const input = document.getElementById(id)
+  if (!input) return
+  input.type = input.type === 'password' ? 'text' : 'password'
+}
+
+function showMessage(msg, type) {
+  const box = document.getElementById('authMessage')
+  if (!box) return
+  box.textContent = msg
+  box.className = `auth-message ${type}`
+}
+
+function clearMessage() {
+  const box = document.getElementById('authMessage')
+  if (!box) return
+  box.textContent = ''
+  box.className = 'auth-message'
+}
+
+// ── Google OAuth Handshake ────────────────────────────────────
+async function handleGoogle() {
+  if (!supabase) return;
+  try {
+    clearMessage()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/pages/chat-view/chat.html'
+      }
+    })
+    if (error) throw error
+  } catch (err) {
+    showMessage(err.message || 'Google login failed.', 'error')
+  }
+}
+
+// ── Email Session Verification ────────────────────────────────
+async function handleLogin(e) {
+  if (e) e.preventDefault();
+  if (!supabase) return;
+
+  const email = document.getElementById('loginEmail').value.trim()
+  const pass  = document.getElementById('loginPassword').value
+  const btn   = document.getElementById('loginBtn')
+
+  clearMessage()
+
+  if (!email || !pass) {
+    showMessage('Please enter email and password.', 'error')
+    return
+  }
+
+  if (btn) {
+    btn.disabled    = true
+    btn.textContent = 'Verifying...'
+  }
+
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: pass
+    })
+    if (error) throw error
+
+    window.location.href = '/pages/chat-view/chat.html'
+  } catch (err) {
+    showMessage(err.message || 'Login failed. Check your entries.', 'error')
+    if (btn) {
+      btn.disabled    = false
+      btn.textContent = 'Authenticate Session'
+    }
+  }
+}
+
+// ── New User Provisioning ────────────────────────────────────
+async function handleSignup(e) {
+  if (e) e.preventDefault();
+  if (!supabase) return;
+
+  const name    = document.getElementById('signupName').value.trim()
+  const email   = document.getElementById('signupEmail').value.trim()
+  const pass    = document.getElementById('signupPassword').value
+  const confirm = document.getElementById('signupConfirm').value
+  const btn     = document.getElementById('signupBtn')
+
+  clearMessage()
+
+  if (!name || !email || !pass || !confirm) {
+    showMessage('All fields are required.', 'error')
+    return
+  }
+
+  if (pass.length < 8) {
+    showMessage('Password must be at least 8 characters.', 'error')
+    return
+  }
+
+  if (pass !== confirm) {
+    showMessage('Passwords do not match.', 'error')
+    return
+  }
+
+  if (btn) {
+    btn.disabled    = true
+    btn.textContent = 'Creating account...'
+  }
+
+  try {
+    const { error } = await supabase.auth.signUp({
+      email: email,
+      password: pass,
+      options: {
+        data: { full_name: name }
+      }
+    })
+    if (error) throw error
+
+    showMessage('Signup successful! Check your email for a confirmation link.', 'success')
+    if (btn) {
+      btn.disabled    = false
+      btn.textContent = 'Provision Account Node'
+    }
+  } catch (err) {
+    showMessage(err.message || 'Signup failed. Please try again.', 'error')
+    if (btn) {
+      btn.disabled    = false
+      btn.textContent = 'Provision Account Node'
+    }
+  }
+}
+
+// ── Reset Matrix Trigger ─────────────────────────────────────
+async function handleForgotPassword() {
+  if (!supabase) return;
+  const email = document.getElementById('loginEmail').value.trim()
+
+  if (!email) {
+    showMessage('Enter your email above first.', 'error')
+    return
+  }
+
+  try {
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/pages/auth/reset-password.html`
+    })
+    showMessage('Password reset email sent! Check your inbox.', 'success')
+  } catch {
+    showMessage('Failed to send reset email. Try again.', 'error')
+  }
+}
+
+// ── Keyboard Interface Maps ───────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return
+  const loginForm = document.getElementById('loginForm')
+  if (loginForm && loginForm.style.display !== 'none') {
+    handleLogin(e)
+  } else {
+    handleSignup(e)
+  }
+})
+
+// ── EXPOSE GLOBAL WINDOW HOOKS (Ensures HTML visibility) ──
+window.switchTab            = switchTab
+window.togglePassword       = togglePassword
+window.handleGoogle         = handleGoogle
+window.handleLogin          = handleLogin
+window.handleSignup         = handleSignup
+window.handleForgotPassword = handleForgotPassword
