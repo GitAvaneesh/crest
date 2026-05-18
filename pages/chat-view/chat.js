@@ -3,7 +3,7 @@
  * CREST AI — chat.js
  * Application controller. Manages the full UI lifecycle:
  * - Supabase auth gate & session validation
- * - First-run username setup modal flow
+ * - First-run username setup modal flow (Fixed display toggles)
  * - Dynamic auto-expanding textarea
  * - Send button enabled/disabled cursor logic
  * - Prompt submission, API fetch, and response rendering
@@ -126,6 +126,7 @@ function showAlert(msg, duration = 5000) {
   if (!dom.alertBanner || !dom.alertText) return;
   
   dom.alertText.textContent = msg;
+  dom.alertBanner.style.display = "flex";
   dom.alertBanner.classList.add("visible");
   
   if (duration > 0) {
@@ -140,6 +141,7 @@ function showAlert(msg, duration = 5000) {
  */
 function dismissAlert() {
   if (dom.alertBanner) {
+    dom.alertBanner.style.display = "none";
     dom.alertBanner.classList.remove("visible");
   }
 }
@@ -183,6 +185,7 @@ async function checkAuthAndInit() {
 
 /**
  * Scans relational rows inside public user metadata profiles table context layout.
+ * Skips the input setup modal entirely if a complete string configuration is found.
  */
 async function loadUserProfileAndValidateIdentity() {
   try {
@@ -194,15 +197,15 @@ async function loadUserProfileAndValidateIdentity() {
 
     if (profileError) throw profileError;
 
-    // Trigger username config choice selection if profile string returns blank parameters
-    if (!profile || !profile.username) {
-      displayUsernameSetupModal(true);
-    } else {
-      // Overwrite the lower user details with their confirmed unique custom name parameter
+    // Direct check: if profile exists and contains a non-blank username, authenticate instantly
+    if (profile && profile.username && profile.username.trim() !== "") {
       if (dom.userEmailLabel) {
         dom.userEmailLabel.textContent = profile.username;
       }
-      displayUsernameSetupModal(false);
+      displayUsernameSetupModal(false); // Hide overlay framework
+    } else {
+      // Trigger username modal choice selection if profile username records return blank parameters
+      displayUsernameSetupModal(true);
     }
   } catch (err) {
     console.error("Profile row resolution sync variance exception:", err.message);
@@ -212,18 +215,21 @@ async function loadUserProfileAndValidateIdentity() {
 }
 
 /* ---------------------------------------------------------------
-   7. USERNAME MODAL GATING PIPELINE (FIXED UPSERT LOGIC)
+   7. USERNAME MODAL GATING PIPELINE (FIXED DISPLAY ENFORCEMENT)
 --------------------------------------------------------------- */
 
 /**
  * Controls visual presentation settings for account initialization username modal frame layers.
+ * Directly alters style attributes to prevent visibility bugs.
  * @param {boolean} showModal - Toggle status vector parameter.
  */
 function displayUsernameSetupModal(showModal) {
   if (!dom.usernameModal) return;
   if (showModal) {
+    dom.usernameModal.style.display = "flex";
     dom.usernameModal.classList.add("visible");
   } else {
+    dom.usernameModal.style.display = "none";
     dom.usernameModal.classList.remove("visible");
   }
 }
@@ -235,6 +241,7 @@ function displayUsernameSetupModal(showModal) {
 function showModalError(errorTextString) {
   if (dom.modalError) {
     dom.modalError.textContent = errorTextString;
+    dom.modalError.style.display = "block";
     dom.modalError.classList.add("visible");
   }
 }
@@ -245,6 +252,7 @@ function showModalError(errorTextString) {
 function clearModalError() {
   if (dom.modalError) {
     dom.modalError.textContent = "";
+    dom.modalError.style.display = "none";
     dom.modalError.classList.remove("visible");
   }
 }
@@ -319,7 +327,7 @@ async function handleUsernameFormSubmission() {
       dom.userEmailLabel.textContent = chosenUsername;
     }
     
-    displayUsernameSetupModal(false);
+    displayUsernameSetupModal(false); // Explicit style shut down trigger
     showAlert("Workspace setup successfully completed. Welcome to Crest AI!", 4000);
 
   } catch (err) {
@@ -429,7 +437,7 @@ function appendStructuralMessageBubbleFrame(messageContentText, speakerIdentityN
   wrapperNodeFrame.id = systemGeneratedBubbleId;
   wrapperNodeFrame.className = `message-wrapper ${speakerIdentityNode}-wrapper`;
   
-  // Create beautiful inline vector asset elements to prevent asset 404 connection bugs
+  // Custom SVG Vector maps to secure layouts without broken external asset links
   const elementAvatarGraphicsSVG = speakerIdentityNode === "user"
     ? `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
          <path d="M8 8C10.2091 8 12 6.20914 12 4C12 1.79086 10.2091 0 8 0C5.79086 0 4 1.79086 4 4C4 6.20914 5.79086 8 8 8Z" fill="currentColor"/>
@@ -600,9 +608,11 @@ function toggleMobileSidebarState(openSidebarState) {
   if (!dom.chatSidebar || !dom.sidebarScrim) return;
   if (openSidebarState) {
     dom.chatSidebar.classList.add("open");
+    dom.sidebarScrim.style.display = "block";
     dom.sidebarScrim.classList.add("visible");
   } else {
     dom.chatSidebar.classList.remove("open");
+    dom.sidebarScrim.style.display = "none";
     dom.sidebarScrim.classList.remove("visible");
   }
 }
